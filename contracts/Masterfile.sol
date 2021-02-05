@@ -24,8 +24,8 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
 
     // Mapping from token ID to account balances
     mapping(uint256 => mapping(address => uint256)) private _balances;
-    mapping(address => uint256) escrowedEth;
-    mapping(uint256 => MST) tokenData;
+    mapping(address => uint256) public escrowedEth;
+    mapping(uint256 => MST) public tokenData;
     mapping(address => bool) isCurrator;
 
     uint256 _tokenNonce;
@@ -46,6 +46,43 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         }
 
         _policyManager = policyManager_;
+    }
+
+    // ---------------------- Getters -----------------------------------------
+
+    function uri(uint256 id) external view override returns (string memory) {
+        return tokenData[id].uri_;
+    }
+
+    function balanceOf(address account, uint256 id)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        require(account != address(0), "MST: Invalid account");
+
+        return _balances[id][account];
+    }
+
+    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
+        public
+        view
+        override
+        returns (uint256[] memory)
+    {
+        require(
+            accounts.length == ids.length,
+            "MST: accounts and ids length mismatch"
+        );
+
+        uint256[] memory batchBalances = new uint256[](accounts.length);
+
+        for (uint256 i = 0; i < accounts.length; ++i) {
+            batchBalances[i] = balanceOf(accounts[i], ids[i]);
+        }
+
+        return batchBalances;
     }
 
     // Can mint and immediately offer for sale
@@ -70,6 +107,8 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
 
         emit TransferSingle(msg.sender, address(0), owner, _tokenNonce, 1);
 
+        _balances[_tokenNonce][owner] += 1;
+
         _tokenNonce += 1;
     }
 
@@ -86,6 +125,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         emit TokenStatusChanged(tokenId, true, value);
     }
 
+    // untested
     function RemoveFromSale(uint256 tokenId) public {
         MST memory _token = tokenData[tokenId];
 
@@ -156,7 +196,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         //-- Create new policy --
 
         // destruct policy parameters form data
-        bytes16 _newPolicyId;
+        bytes16 _newPolicyId = bytes16("1");
         uint64 _newEndTimestamp;
         address[] calldata _nodes;
 
@@ -189,10 +229,9 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         // Do safer transfer checks...
 
         emit TransferSingle(msg.sender, from, to, id, 1);
-    }
 
-    function uri(uint256 id) external view override returns (string memory){
-        return tokenData[id].uri_;
+        _balances[id][from] -= 1;
+        _balances[id][to] += 1;
     }
 
     // -- Admin --

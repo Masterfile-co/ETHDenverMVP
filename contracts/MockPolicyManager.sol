@@ -19,7 +19,7 @@ contract MockPolicyManager is IPolicyManager {
         override
         returns (uint256 refundValue)
     {
-        console.log("Policy Created");
+        console.log("Policy Revoked");
         return 0;
     }
 }
