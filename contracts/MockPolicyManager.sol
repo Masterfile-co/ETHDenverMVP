@@ -1,24 +1,31 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.0;
 
-import "./interfaces/IPolicyManager.sol";
+// import "./interfaces/IMockPolicyManager.sol";
 import "hardhat/console.sol";
 
-contract MockPolicyManager is IPolicyManager {
+contract PolicyManager {
+    
+    struct Range {
+        uint128 min;
+        uint128 defaultValue;
+        uint128 max;
+    }
+
+    Range public feeRateRange;
 
     function createPolicy(
         bytes16 _policyId,
         address _policyOwner,
         uint64 _endTimestamp,
         address[] calldata _nodes
-    ) external payable override {
+    ) external payable {
         console.log("Policy Created");
         console.log(_nodes[0]);
     }
 
     function revokePolicy(bytes16 _policyId)
         external
-        override
         returns (uint256 refundValue)
     {
         console.log("Policy Revoked");

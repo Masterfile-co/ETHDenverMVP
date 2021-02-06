@@ -6,7 +6,6 @@ import "./interfaces/ERC165.sol";
 import "./interfaces/IERC1155.sol";
 import "./interfaces/IERC1155MetadataURI.sol";
 import "./interfaces/IPolicyManager.sol";
-import "./interfaces/IStakingEscrow.sol";
 
 import "./utils/SafeMath.sol";
 
@@ -36,17 +35,12 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
 
     uint256 _tokenNonce;
     IPolicyManager _policyManager;
-    IStakingEscrow _stakingEscrow;
     uint256 fee; // read from policyManager
 
     event TokenStatusChanged(uint256 tokenId, bool forSale, uint256 salePrice);
     event RequestBuy(uint256 tokenId, address buyer);
 
-    constructor(
-        address[] memory currators,
-        IPolicyManager policyManager_,
-        IStakingEscrow stakingEscrow_
-    ) {
+    constructor(address[] memory currators, IPolicyManager policyManager_) {
         // register the supported interfaces to conform to ERC1155 via ERC165
         _registerInterface(type(IERC1155).interfaceId);
 
@@ -58,7 +52,6 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         }
 
         _policyManager = policyManager_;
-        _stakingEscrow = stakingEscrow_;
         fee = 50000000000;
     }
 
@@ -160,9 +153,10 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         require(_token.offer.buyer == address(0), "MST: Exsisting Offer");
         // TODO: Calculate cost of policy and include in this amount
 
-        // fee for 3 nodes for 100 years
+        // fee for 3 nodes for 1 year
 
-        uint256 policyCost = fee.mul(36500).mul(3);
+        uint256 policyCost = fee.mul(365).mul(3);
+
         require(
             msg.value == _token.salePrice.add(policyCost),
             "MST: Insufficient Funds"
@@ -204,11 +198,13 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         require(_token.owner == from, "MST: Invalid Sender");
         require(_token.offer.buyer == to, "MST: Invalid Offer");
 
-        uint256 policyPayment = fee.mul(36500).mul(3); // = feeRate * periods * stakers.length && periods = endTimestampPeriod - currentPeriod + 1
+        uint256 policyPayment = fee.mul(365).mul(3); // = feeRate * periods * stakers.length && periods = endTimestampPeriod - currentPeriod + 1
         require(
             escrowedEth[to] >= _token.salePrice.add(policyPayment),
             "MST: Insufficient Escrow"
         );
+
+        console.log("Revoking old policy");
 
         // Revoke old policy
 
@@ -218,25 +214,25 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
 
         //-- Create new policy --
 
-        // destruct policy parameters form data
-        bytes16 _newPolicyId = bytes16("1");
+        // destruct policy parameters from data
+        bytes16 _newPolicyId;
+        uint256 _deltaTime;
+        address[] memory _nodes = new address[](3); // hard coding 3 nodes for now
 
-        // 100 years from now
-        uint64 _newEndTimestamp = uint64(block.timestamp.add(315360000));
+        (_newPolicyId, _deltaTime, _nodes) = abi.decode(
+            data,
+            (bytes16, uint256, address[])
+        );
 
-        (, uint256[2][] memory activeStakers) =
-            _stakingEscrow.getActiveStakers(365, 0, 3);
+        // 1 years from now
+        uint64 _newEndTimestamp = uint64(block.timestamp.add(_deltaTime));
 
-        address[] memory _nodes = new address[](activeStakers.length);
-
-        for (uint256 i; i < activeStakers.length; i++) {
-            _nodes[i] = address(activeStakers[i][0]);
-        }
+        console.log(_nodes[1]);
 
         _policyManager.createPolicy{value: policyPayment}(
             _newPolicyId,
             address(this),
-            _newEndTimestamp,
+            1603605317,
             _nodes
         );
 

@@ -5,7 +5,7 @@ pragma solidity ^0.7.0;
 import "hardhat/console.sol";
 
 // is IStakingEscrow
-contract MockStakingEscrow {
+contract StakingEscrow {
     function getActiveStakers(
         uint16 _periods,
         uint256 _startIndex,
