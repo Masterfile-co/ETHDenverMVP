@@ -2,10 +2,10 @@
 pragma solidity ^0.7.6;
 pragma abicoder v2;
 
-import "./interfaces/ERC165.sol";
-import "./interfaces/IERC1155.sol";
-import "./interfaces/IERC1155MetadataURI.sol";
-import "./interfaces/IPolicyManager.sol";
+import "./Interfaces/ERC165.sol";
+import "./Interfaces/IERC1155.sol";
+import "./Interfaces/IERC1155MetadataURI.sol";
+import "./Interfaces/IPolicyManager.sol";
 
 import "./utils/SafeMath.sol";
 
