@@ -4,6 +4,7 @@
   "description": "mvp for ETHDenver 2021",
   "main": "index.js",
   "dependencies": {
+    "bignumber.js": "^9.0.1",
     "hardhat": "^2.0.8"
   },
   "devDependencies": {

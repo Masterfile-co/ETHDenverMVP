@@ -1,3 +1,4 @@
+const { default: BigNumber } = require("bignumber.js");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
@@ -45,7 +46,7 @@ describe("Masterfile ERC1155", function () {
   }
 
   context("With testing Masterfile contract", async () => {
-    xit("Should mint a new NFT", async () => {
+    it("Should mint a new NFT", async () => {
       await mintNFT("testuri", false, 0);
 
       let _uri = await masterfile.uri(0);
@@ -63,7 +64,7 @@ describe("Masterfile ERC1155", function () {
       expect(_tokenData.salePrice.toString()).to.equal("0");
     });
 
-    xit("Should mint a new NFT and offer for sale", async () => {
+    it("Should mint a new NFT and offer for sale", async () => {
       await mintNFT("testuri", true, ethers.utils.parseEther("1"));
 
       let _tokenData = await masterfile.tokenData(0);
@@ -71,20 +72,23 @@ describe("Masterfile ERC1155", function () {
       expect(_tokenData.salePrice.toString()).to.equal("1000000000000000000");
     });
 
-    xit("should let bob offer to buy NFT", async () => {
+    it("should let bob offer to buy NFT", async () => {
       await mintNFT("testuri", true, ethers.utils.parseEther("1"));
 
       let initBal = await bob.getBalance();
 
-      await requestBuy(bob, 0, "1000000000000000000");
+      let fee = new BigNumber("50000000000").times(3).times(36500);
+      let cost = ethers.utils.parseEther("1");
+
+      await requestBuy(bob, 0, fee.plus(cost.toString()).toString());
 
       let finalBal = await bob.getBalance();
 
       // includes gas
-      expect(initBal.sub(finalBal)).to.equal("1000575008000000000");
+      expect(initBal.sub(finalBal)).to.equal("1006059200000000000");
 
       let escrow = await masterfile.escrowedEth(bob.address);
-      expect(escrow.toString()).to.equal("1000000000000000000");
+      expect(escrow.toString()).to.equal("1005475000000000000");
 
       let offer = await masterfile.tokenData(0);
       offer = offer.offer;
@@ -94,7 +98,10 @@ describe("Masterfile ERC1155", function () {
     it("should let currator execute sale", async () => {
       await mintNFT("testuri", true, ethers.utils.parseEther("1"));
 
-      await requestBuy(bob, 0, "1000000000000000000");
+      let fee = new BigNumber("50000000000").times(3).times(36500);
+      let cost = ethers.utils.parseEther("1");
+
+      await requestBuy(bob, 0, fee.plus(cost.toString()).toString());
 
       let initBal = await alice.getBalance();
 
@@ -120,7 +127,10 @@ describe("Masterfile ERC1155", function () {
     it("should let sale to third pary", async () => {
       await mintNFT("testuri", true, ethers.utils.parseEther("1"));
 
-      await requestBuy(bob, 0, ethers.utils.parseEther("1"));
+      let fee = new BigNumber("50000000000").times(3).times(36500);
+      let cost = ethers.utils.parseEther("1");
+
+      await requestBuy(bob, 0, fee.plus(cost.toString()).toString());
 
       await executeBuy(0, alice, bob);
 
@@ -130,7 +140,9 @@ describe("Masterfile ERC1155", function () {
 
       await _masterfile.OfferForSale(0, ethers.utils.parseEther("2"));
 
-      await requestBuy(charlie, 0, ethers.utils.parseEther("2"));
+      cost = ethers.utils.parseEther("2");
+
+      await requestBuy(charlie, 0, fee.plus(cost.toString()).toString());
 
       let token = await masterfile.tokenData(0);
 

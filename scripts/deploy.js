@@ -11,8 +11,18 @@ async function main() {
 
     console.log(`Policy Manager deployed to ${mock.address}`);
 
+    let StakingEscrow = await ethers.getContractFactory("MockStakingEscrow");
+    let escrow = await StakingEscrow.deploy();
+    await escrow.deployed();
+
+    console.log(`Policy Manager deployed to ${escrow.address}`);
+
     let Masterfile = await ethers.getContractFactory("Masterfile");
-    let masterfile = await Masterfile.deploy([account], mock.address);
+    let masterfile = await Masterfile.deploy(
+      [account],
+      mock.address,
+      escrow.address
+    );
     await masterfile.deployed();
 
     console.log(`Masterfile deployed to ${masterfile.address}`);
