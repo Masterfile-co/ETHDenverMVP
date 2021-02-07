@@ -11,10 +11,13 @@ from datetime import timedelta
 import io
 import maya
 import os
+from uuid import uuid4
 
 from nucypher.characters.lawful import Ursula, Alice, Bob
 from nucypher.config.constants import TEMPORARY_DOMAIN
 from nucypher.config.keyring import NucypherKeyring
+
+SESSION_ID = os.getenv("SESSION_ID")
 
 SEEDNODE_URI = "localhost:11500"
 ursula = Ursula.from_seed_and_stake_info(seed_uri=SEEDNODE_URI,
@@ -46,6 +49,7 @@ alice = Alice(
 
 size = 128, 128
 
+
 class EncryptView(MethodView):
 
     def post(self):
@@ -63,6 +67,7 @@ class EncryptView(MethodView):
 
         # generate metadata from inputs and file
 
+        filename = str(uuid4())
 
         # generate thumbnail
 
@@ -89,6 +94,12 @@ class EncryptView(MethodView):
 
         ciphertext, signature = enrico.encrypt_message(plaintext=buf.getvalue())
         # upload file and metadata to textile
+
+        f = open("./app/encrypt/bucket/"+filename, "wb")
+        f.write(ciphertext.to_bytes())
+        f.close()
+
+        os.system("cd app/encrypt/bucket; hub buck push -y --session "+ SESSION_ID)
 
         # return metadata uri
 
