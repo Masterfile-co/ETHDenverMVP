@@ -1,112 +1,67 @@
-# This is for testing the nucypher library
+from dotenv import load_dotenv
+load_dotenv()
 
-import datetime
-import sys
-import json
 import os
-import shutil
 
-import maya
+SIGNER_PASSWWORD = os.getenv("SIGNER_PASSWORD")
+INFURI_API_KEY = os.getenv("INFURI_API_KEY")
 
-from nucypher.characters.lawful import Bob, Ursula
-from nucypher.config.characters import AliceConfiguration
-from nucypher.config.constants import TEMPORARY_DOMAIN
-from nucypher.utilities.logging import GlobalLoggerSettings
+from nucypher.blockchain.eth.interfaces import BlockchainInterfaceFactory
+BlockchainInterfaceFactory.initialize_interface(provider_uri="https://goerli.infura.io/v3/"+INFURI_API_KEY)
+
+from nucypher.blockchain.eth.signers import Signer
+from nucypher.characters.lawful import Ursula, Alice
+
+# Keyfile Wallet
+software_wallet = Signer.from_signer_uri('keystore:///home/ghard/testkeystore.json')
+software_wallet.unlock_account("0xf61DBAbF5Ac0A3F99e91b663A590cF4cB58563D9", password=SIGNER_PASSWWORD)
+
+seed_uri = 'https://lynx.nucypher.network:9151'
+ursula = Ursula.from_seed_and_stake_info(seed_uri=seed_uri)
+
 from nucypher.config.keyring import NucypherKeyring
 
-PASSWORD = "THIS_IS_A_SHITTY_TEST_PASSWORD"
-
-# keyring = NucypherKeyring.generate(
-#     checksum_address="0x6A9da1eA8829ed7BE2250f3C562D897203920F94",
-#     password=PASSWORD
-# )
-
-
-######################
-# Boring setup stuff #
-######################
-
-
-# Twisted Logger
-
-GlobalLoggerSettings.start_console_logging()
-
-TEMP_ALICE_DIR = os.path.join('/', 'tmp', 'heartbeat-demo-alice')
-
-
-# if your ursulas are NOT running on your current host,
-# run like this: python alicia.py 172.28.1.3:11500
-# otherwise the default will be fine.
+NEW_PASSWORD="THIS_IS_A_TERRIBLE_PASSWORD"
 
 try:
-    SEEDNODE_URI = sys.argv[1]
-except IndexError:
-    SEEDNODE_URI = "localhost:11500"
+    keyring = NucypherKeyring.generate(
+        checksum_address='0xf61DBAbF5Ac0A3F99e91b663A590cF4cB58563D9',
+        password=NEW_PASSWORD,  # used to encrypt nucypher private keys
+        keyring_root= "//home/ghard/.local/share/nucypher/keyring"
+    )
+except:
+    # Restore an existing Alice keyring
+    keyring = NucypherKeyring(account='0xf61DBAbF5Ac0A3F99e91b663A590cF4cB58563D9')
+    
 
-POLICY_FILENAME = "policy-metadata.json"
+keyring.unlock(password=NEW_PASSWORD)
+print(keyring.checksum_address)
 
-
-#######################################
-# Alicia, the Authority of the Policy #
-#######################################
-
-
-# We get a persistent Alice.
-# If we had an existing Alicia in disk, let's get it from there
-
-passphrase = "TEST_ALICIA_INSECURE_DEVELOPMENT_PASSWORD"
-# If anything fails, let's create Alicia from scratch
-# Remove previous demo files and create new ones
-
-shutil.rmtree(TEMP_ALICE_DIR, ignore_errors=True)
-
-ursula = Ursula.from_seed_and_stake_info(seed_uri=SEEDNODE_URI,
-                                         federated_only=True,
-                                         minimum_stake=0)
-
-alice_config = AliceConfiguration(
-    config_root=os.path.join(TEMP_ALICE_DIR),
-    domain=TEMPORARY_DOMAIN,
-    known_nodes={ursula},
-    start_learning_now=False,
-    federated_only=True,
-    learn_on_same_thread=True,
+# Instantiate Alice
+alice = Alice(
+    keyring=keyring,              # NuCypher Keyring
+    known_nodes=[ursula],         # Peers (Optional)
+    signer=software_wallet,                # Alice Wallet
+    # provider_uri="https://goerli.infura.io/v3/45b861ae09994ee585c2b7fafdeb8e70",  # Ethereum RPC endpoint
+    domain='lynx',                 # NuCypher network (mainnet, lynx, ibex)
+    client_password=NEW_PASSWORD,
+    federated_only=True
 )
 
-alice_config.initialize(password=passphrase)
-
-alice_config.keyring.unlock(password=passphrase)
-alicia = alice_config.produce()
-
-# We will save Alicia's config to a file for later use
-alice_config_file = alice_config.to_configuration_file()
-
-# Let's get to learn about the NuCypher network
-alicia.start_learning_loop(now=True)
-
-# At this point, Alicia is fully operational and can create policies.
-# The Policy Label is a bytestring that categorizes the data that Alicia wants to share.
-# Note: we add some random chars to create different policies, only for demonstration purposes
-label = "nft-1-"+os.urandom(4).hex()
+label = "nft-test"+os.urandom(4).hex()
 label = label.encode()
 
-# Alicia can create the public key associated to the policy label,
-# even before creating any associated policy.
-policy_pubkey = alicia.get_policy_encrypting_key_from_label(label)
-
-print("The policy public key for "
-      "label '{}' is {}".format(label.decode("utf-8"), policy_pubkey.to_bytes().hex()))
-
-# Encrypting Data:
+policy_pubkey = alice.get_policy_encrypting_key_from_label(label)
 
 from nucypher.characters.lawful import Enrico
 
+
+with open("//home/ghard/testimg.jpg", "rb") as image:
+  f = image.read()
+  b = bytearray(f)
+
+
 enrico = Enrico(policy_encrypting_key=policy_pubkey)
-
-enrico_public_key = bytes(enrico.stamp)
-
-plaintext = b'This is plain text!'
-
-ciphertext, signature = enrico.encrypt_message(plaintext)
+ciphertext, signature = enrico.encrypt_message(plaintext=b)
 
 print(ciphertext)
