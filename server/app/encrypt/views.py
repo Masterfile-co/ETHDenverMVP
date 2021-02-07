@@ -6,7 +6,7 @@ from flask import make_response, request, jsonify
 class EncryptView(MethodView):
 
     def post(self):
-        "User should post file and encryption keys for Enrico to encrypt"
+        "User should post file and encryption keys for Enrico to encrypt. This should upload encrypted file and metadat to textile"
         if request.files:
             image = request.files["artwork"]
             print(image.filename)
