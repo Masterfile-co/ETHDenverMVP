@@ -73,9 +73,9 @@ policy_pubkey = alice.get_policy_encrypting_key_from_label(label)
 from nucypher.characters.lawful import Enrico
 
 
-with open("//home/ghard/testimg.jpg", "rb") as image:
-  f = image.read()
-  b = bytearray(f)
+# with open("//home/ghard/testimg.jpg", "rb") as image:
+#   f = image.read()
+#   b = bytearray(f)
 
 img = Image.open("//home/ghard/testimg.jpg", mode="r")
 
