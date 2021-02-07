@@ -1,9 +1,11 @@
 from dotenv import load_dotenv
 load_dotenv()
+from PIL import Image
 
 import maya
 from datetime import timedelta
 import os
+import io
 
 SIGNER_PASSWWORD = os.getenv("SIGNER_PASSWORD")
 INFURI_API_KEY = os.getenv("INFURI_API_KEY")
@@ -71,11 +73,14 @@ policy_pubkey = alice.get_policy_encrypting_key_from_label(label)
 from nucypher.characters.lawful import Enrico
 
 
-# with open("//home/ghard/testimg.jpg", "rb") as image:
-#   f = image.read()
-#   b = bytearray(f)
+with open("//home/ghard/testimg.jpg", "rb") as image:
+  f = image.read()
+  b = bytearray(f)
 
-b = b'This is a test'
+img = Image.open("//home/ghard/testimg.jpg", mode="r")
+
+
+# b = b'This is a test'
 
 enrico = Enrico(policy_encrypting_key=policy_pubkey)
 ciphertext, signature = enrico.encrypt_message(plaintext=b)
@@ -133,4 +138,5 @@ decrypted_plaintext = bob.retrieve(
     alice_verifying_key = alice_sig_pubkey
 )
 
-print(decrypted_plaintext)
+image = Image.open(io.BytesIO(decrypted_plaintext[0]))
+image.save("/mnt/c/Users/ghard/Documents/test.jpg")
