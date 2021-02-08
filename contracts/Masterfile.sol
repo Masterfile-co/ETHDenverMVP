@@ -27,11 +27,16 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         Offer offer;
     }
 
+    struct User {
+        string 
+    }
+
     // Mapping from token ID to account balances
     mapping(uint256 => mapping(address => uint256)) private _balances;
     mapping(address => uint256) public escrowedEth;
     mapping(uint256 => MST) public tokenData;
     mapping(address => bool) isCurrator;
+    mapping(address => )
 
     uint256 _tokenNonce;
     IPolicyManager _policyManager;
@@ -90,6 +95,10 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         }
 
         return batchBalances;
+    }
+
+    function RegisterUser(string memory encKey, string memory sigKey ) public {
+
     }
 
     // Can mint and immediately offer for sale

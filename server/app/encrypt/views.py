@@ -12,6 +12,7 @@ import io
 import maya
 import os
 from uuid import uuid4
+import json
 
 from nucypher.characters.lawful import Ursula, Alice, Bob
 from nucypher.config.constants import TEMPORARY_DOMAIN
@@ -49,6 +50,9 @@ alice = Alice(
 
 size = 128, 128
 
+formats = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif"}
+
+base_uri = "https://hub.textile.io/ipns/bafzbeibtbalzgi3nb4yiej47mcaajsd6xcn6m3avygg6ycq67z3fulzw5e/"
 
 class EncryptView(MethodView):
 
@@ -65,21 +69,23 @@ class EncryptView(MethodView):
 
                 make_response(jsonify(response)), 404
 
-        # generate metadata from inputs and file
-
         filename = str(uuid4())
 
         # generate thumbnail
 
         img = Image.open(image.stream)
 
+        frmt = img.format
+        
+
         thmnl = img.copy()
         thmnl.thumbnail(size)
+        thmnl.save("./app/encrypt/bucket/"+filename+"_thumbnail"+formats[frmt], format=frmt)
         #Save to textile
 
         # create policy from title of artwork
 
-        label = request.data["title"].encode()
+        label = request.data["name"].encode()
 
         policy_pubkey = alice.get_policy_encrypting_key_from_label(label)
 
@@ -95,17 +101,38 @@ class EncryptView(MethodView):
         ciphertext, signature = enrico.encrypt_message(plaintext=buf.getvalue())
         # upload file and metadata to textile
 
-        f = open("./app/encrypt/bucket/"+filename, "wb")
+        f = open("./app/encrypt/bucket/"+filename+formats[frmt], "wb")
         f.write(ciphertext.to_bytes())
         f.close()
+
+        # generate metadata from inputs and file
+
+        metadata = {
+            "name": request.data["name"],
+            "creator": request.data["creator"],
+            "description": request.data["description"],
+            "properties": {
+                "masterfile": base_uri+filename+formats[frmt],
+                "thumbnail":  base_uri+filename+"_thumbnail"+formats[frmt],
+                "file": {
+                    "format": frmt,
+                    "size": os.path.getsize("./app/encrypt/bucket/"+filename+formats[frmt]),
+                    "resolution": img.size
+                }
+            }
+        }
+
+        with open("./app/encrypt/bucket/"+filename+"_metadata.json", "w") as outfile:
+            json.dump(metadata, outfile)
+
 
         os.system("cd app/encrypt/bucket; hub buck push -y --session "+ SESSION_ID)
 
         # return metadata uri
 
         response = {
-                'message': "Hello World",
-                'uri': ''
+                'message': "Upload Complete",
+                'uri': base_uri + filename + "_metadata.json"
             }
 
         return make_response(jsonify(response)), 200
