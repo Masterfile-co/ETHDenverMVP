@@ -4,10 +4,14 @@ import Topbar from "./Topbar";
 
 export default function Layout(props) {
   return (
-    <body class="min-h-screen bg-white">
-      <Topbar />
-      {props.children}
-      <Footer />
-    </body>
+    <div class="font-sans antialiased text-gray-900">
+      <div>
+        <div className="min-h-screen bg-white">
+          <Topbar />
+          {props.children}
+          <Footer />
+        </div>
+      </div>
+    </div>
   );
 }

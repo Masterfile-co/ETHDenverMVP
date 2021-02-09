@@ -1,11 +1,12 @@
 import React from "react";
-import { BrowserRouter as Router } from "react-router-dom";
-import Layout from "./components/Layout";
-import BaseRouter from "./routes";
 
-export default function App() {
+import { BrowserRouter as Router } from "react-router-dom";
+import BaseRouter from "./routes";
+import Layout from "./components/Layout";
+
+function App() {
   return (
-    <div>
+    <div className="App">
       <Router>
         <Layout>
           <BaseRouter />
@@ -14,3 +15,5 @@ export default function App() {
     </div>
   );
 }
+
+export default App;

@@ -4,9 +4,13 @@
   "description": "mvp for ETHDenver 2021",
   "main": "index.js",
   "dependencies": {
+    "@tailwindcss/postcss7-compat": "^2.0.3",
+    "autoprefixer": "^9.8.6",
     "bignumber.js": "^9.0.1",
     "dotenv": "^8.2.0",
-    "hardhat": "^2.0.8"
+    "hardhat": "^2.0.8",
+    "postcss": "^7.0.35",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.0.3"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
