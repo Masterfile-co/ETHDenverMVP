@@ -1,4 +1,6 @@
 import React from "react";
+import { Helmet } from "react-helmet";
+
 import Header from "./components/Header";
 import InfoCard from "./components/InfoCard";
 import PictureFame from "./components/PictureFame";
@@ -6,6 +8,10 @@ import PictureFame from "./components/PictureFame";
 export default function View() {
   return (
     <>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Masterfile | X by Artist</title>
+      </Helmet>
       <div class="py-10">
         <Header />
       </div>

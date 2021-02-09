@@ -1,4 +1,6 @@
 import React from "react";
+import { Helmet } from "react-helmet";
+
 import MintForm from "./components/MintForm";
 import SVG1 from "./components/SVG1";
 import SVG2 from "./components/SVG2";
@@ -6,6 +8,10 @@ import SVG2 from "./components/SVG2";
 export default function Create() {
   return (
     <div className="py-10">
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Masterfile | Create Masterfile</title>
+      </Helmet>
       <header>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold leading-tight text-gray-900">

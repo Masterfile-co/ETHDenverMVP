@@ -1,8 +1,11 @@
 import React from "react";
+import { Helmet } from "react-helmet";
+
 import Header from "./components/Header";
 import Gaberiel from "../../images/gabrielsmall-Recovered.png";
 import Dive from "../../images/GirlsclubAsia-Illustrator-Yuko-Shimizu-sva_poster3_dive_print_size.jpg";
 import Card from "./components/Card";
+
 
 const MockData = [
   {
@@ -26,6 +29,10 @@ const MockData = [
 export default function Show() {
   return (
     <div class="py-10">
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Masterfile | Show</title>
+      </Helmet>
       <Header />
       <main>
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">

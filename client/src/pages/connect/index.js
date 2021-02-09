@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 
 import Logo from "../../images/Masterfile-LogoSymbol-Purple.png";
+import { Helmet } from "react-helmet";
 
 export default function Connect() {
   const [state, setState] = useState("");
@@ -31,6 +32,10 @@ export default function Connect() {
 
   return (
     <div class="min-h-full flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Masterfile | Connect Wallet</title>
+      </Helmet>
       <div class="max-w-md w-full">
         <div>
           <img class="mx-auto w-auto h-20" src={Logo} alt="" />
@@ -43,7 +48,7 @@ export default function Connect() {
               class="ml-1 font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:underline transition ease-in-out duration-150"
               href="#"
             >
-              or choose a password to sign up
+              and choose a password to sign up
             </span>
           </p>
         </div>

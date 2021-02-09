@@ -1,4 +1,5 @@
 import React from "react";
+import { Helmet } from "react-helmet";
 import Card from "./components/Card";
 import Header from "./components/Header";
 
@@ -24,6 +25,10 @@ const MockData = [
 export default function Collection() {
   return (
     <div class="py-10">
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>Masterfile | Collection</title>
+      </Helmet>
       <Header />
       <main>
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
