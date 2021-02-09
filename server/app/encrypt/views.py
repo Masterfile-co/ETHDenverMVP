@@ -80,32 +80,59 @@ class LoginView(MethodView):
 
     def post(self):
 
+        if not request.data["account"] or not request.data["password"]:
+
+            response = {
+                    'message': "User data missing"
+                }
+
+            return make_response(jsonify(response)), 404
+
         user = request.data["account"]
 
         password = request.data["password"]
 
-        print(user)
-        print(password)
+        try:
+            keyring = NucypherKeyring.generate(
+                checksum_address=user,
+                password=password,  # used to encrypt nucypher private keys
+                keyring_root= "//home/ghard/.local/share/nucypher/keyring"
+            )
+            keyring.unlock(password=password)
 
-        # try:
-        # keyring = NucypherKeyring.generate(
-        #     checksum_address=user,
-        #     password=password,  # used to encrypt nucypher private keys
-        #     keyring_root= "//home/ghard/.local/share/nucypher/keyring"
-        # )
+            masterfile_contract.functions.RegisterUser(user, keyring.signing_public_key.to_bytes(), keyring.encrypting_public_key.to_bytes()).transact({"from": w3.eth.accounts[0]})
+        
+            response = {
+                        'message': "Registration Accepted"
+                    }
 
-        keyring = NucypherKeyring(account=user)
-        keyring.unlock(password=password)
+            return make_response(jsonify(response)), 200
+            
+        except:
+            
+            try: 
+                keyring = NucypherKeyring(account=user)
+                keyring.unlock(password=password)
 
-        masterfile_contract.functions.RegisterUser(user, keyring.signing_public_key.to_bytes(), keyring.encrypting_public_key.to_bytes()).transact({"from": w3.eth.accounts[0]})
-    
-        response = {
-                    'message': "Registration Accepted"
-                }
+                # Double check user has keys
 
-        return make_response(jsonify(response)), 200
+                keys = masterfile_contract.functions.userKeys(user).call()
 
-        # except:
+                print(keys)
+
+                response = {
+                        'message': "Login Successful"
+                    }
+
+                return make_response(jsonify(response)), 200
+
+            except:
+
+                response = {
+                        'message': "Invalid Login"
+                    }
+
+                return make_response(jsonify(response)), 404
 
 
 
