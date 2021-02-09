@@ -2,8 +2,14 @@
 
 MVP for ETHDenver 2021
 
+To start frontend:
+cd client
+yarn start
+
 To start local blockchain:
 brownie console --network development
+run("deploy")
+
 <!-- npm install
 npx hardhat node --hostname 0.0.0.0
 npx hardhat run scripts/deploy.js --network localhost -->

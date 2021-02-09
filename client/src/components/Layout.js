@@ -4,7 +4,7 @@ import Topbar from "./Topbar";
 
 export default function Layout(props) {
   return (
-    <div class="font-sans antialiased text-gray-900">
+    <div className="font-sans antialiased text-gray-900">
       <div>
         <div className="min-h-screen bg-white">
           <Topbar />
