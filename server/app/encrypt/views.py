@@ -13,6 +13,7 @@ import maya
 import os
 from uuid import uuid4
 import json
+import sys
 
 # NuCypher initiation ---------------------------------
 
@@ -62,14 +63,116 @@ base_uri = "https://hub.textile.io/ipns/bafzbeibtbalzgi3nb4yiej47mcaajsd6xcn6m3a
 
 from web3 import Web3, HTTPProvider, eth
 
-# http://host.docker.internal:8545
-SEEDNODE_URI = os.getenv("BLOCKCHAIN_URI") 
-w3 = Web3(HTTPProvider("http://localhost:8545/"))
-# w3.eth.default_account = w3.eth.accounts[0]
+w3 = Web3(HTTPProvider("http://0.0.0.0:8545/"))
+w3.eth.default_account = w3.eth.accounts[0]
 
-# masterfile_contract = w3.eth.contract(address="0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", abi="./interfaces/Masterfile.json")
-# print(masterfile_contract.caller().tokenNonce())
-print(w3.isConnected())
+print(os.getcwd())
+
+with open("./interfaces/Masterfile.json") as f:
+    info_json = json.load(f)
+abi = info_json["abi"]
+
+masterfile_contract = w3.eth.contract(address="0xB8485421abC325D172652123dBd71D58b8117070", abi=abi)
+
+masterfile_contract.functions.userKeys("0x0000000000000000000000000000000000000000").call()
+
+class LoginView(MethodView):
+
+    def post(self):
+
+        user = request.data["account"]
+
+        password = request.data["password"]
+
+        print(user)
+        print(password)
+
+        # try:
+        # keyring = NucypherKeyring.generate(
+        #     checksum_address=user,
+        #     password=password,  # used to encrypt nucypher private keys
+        #     keyring_root= "//home/ghard/.local/share/nucypher/keyring"
+        # )
+
+        keyring = NucypherKeyring(account=user)
+        keyring.unlock(password=password)
+
+        masterfile_contract.functions.RegisterUser(user, keyring.signing_public_key.to_bytes(), keyring.encrypting_public_key.to_bytes()).transact({"from": w3.eth.accounts[0]})
+    
+        response = {
+                    'message': "Registration Accepted"
+                }
+
+        return make_response(jsonify(response)), 200
+
+        # except:
+
+
+
+
+
+    # def post(self):
+
+    #     if not request.data["account"] or not request.data["password"]:
+    #         response = {
+    #                 'message': "User data missing"
+    #             }
+
+    #         return make_response(jsonify(response)), 404
+
+    #     user = request.data["account"]
+
+    #     password = request.data["password"]
+
+    #     try:
+
+    #         keyring = NucypherKeyring(account=user)
+    #         keyring.unlock(password=password)
+
+    #         response = {
+    #                 'message': "Login Successful"
+    #             }
+
+    #         return make_response(jsonify(response)), 200
+
+    #         keyring = NucypherKeyring.generate(
+    #             checksum_address=user,
+    #             password=password,  # used to encrypt nucypher private keys
+    #             keyring_root= "//home/ghard/.local/share/nucypher/keyring"
+    #         )
+
+    #         masterfile_contract.functions.RegisterUser(user, keyring.signing_public_key, keyring.encrypting_public_key).transact()
+            
+    #         response = {
+    #                     'message': "Registration Accepted"
+    #                 }
+
+    #         return make_response(jsonify(response)), 200
+
+    #     except:
+
+    #         try:
+    #             keyring = NucypherKeyring.generate(
+    #                 checksum_address=user,
+    #                 password=password,  # used to encrypt nucypher private keys
+    #                 keyring_root= "//home/ghard/.local/share/nucypher/keyring"
+    #             )
+
+    #             masterfile_contract.functions.RegisterUser(user, keyring.signing_public_key, keyring.encrypting_public_key).transact()
+                
+    #             response = {
+    #                         'message': "Registration Accepted"
+    #                     }
+
+    #             return make_response(jsonify(response)), 200
+
+    #         except:
+
+    #             response = {
+    #                     'message': "Invalid Login"
+    #                 }
+
+    #             return make_response(jsonify(response)), 404
 
 class EncryptView(MethodView):
 
@@ -84,7 +187,7 @@ class EncryptView(MethodView):
                     'message': "No File Attached"
                 }
 
-                make_response(jsonify(response)), 404
+                return make_response(jsonify(response)), 404
 
         if not request.data["name"] or not request.data["description"] or not request.data["creator"]:
             
@@ -92,7 +195,7 @@ class EncryptView(MethodView):
                     'message': "Insufficient data attached"
                 }
 
-            make_response(jsonify(response)), 404
+            return make_response(jsonify(response)), 404
 
         filename = str(uuid4())
 
@@ -173,5 +276,7 @@ class EncryptView(MethodView):
 
 
 encrypt_view = EncryptView.as_view("encrypt_view")
+login_view = LoginView.as_view("register_view")
 
 encrypt_blueprint.add_url_rule('/', view_func=encrypt_view, methods=['GET', 'POST'])
+encrypt_blueprint.add_url_rule('/login', view_func=login_view, methods=['POST'])

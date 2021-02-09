@@ -111,3 +111,11 @@ artifacts
 secrets.*
 .env
 venv
+
+.idea/
+
+__pycache__
+.history
+.hypothesis/
+client/src/artifacts
+reports/

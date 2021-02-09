@@ -2,15 +2,15 @@
 pragma solidity ^0.7.6;
 pragma abicoder v2;
 
-import "./interfaces/ERC165.sol";
-import "./interfaces/IERC1155.sol";
-import "./interfaces/IERC1155MetadataURI.sol";
+import "../interfaces/ERC165.sol";
+import "../interfaces/IERC1155.sol";
+import "../interfaces/IERC1155MetadataURI.sol";
 // import "./interfaces/IPolicyManager.sol";
 import "./MockPolicyManager.sol";
 
 import "./utils/SafeMath.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     using SafeMath for uint256;
@@ -29,8 +29,8 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     struct User {
-        string pub_key;
-        string enc_key;
+        bytes pub_key;
+        bytes enc_key;
     }
 
     // Mapping from token ID to account balances
@@ -38,7 +38,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     mapping(address => uint256) public escrowedEth;
     mapping(uint256 => MST) public tokenData;
     mapping(address => bool) isCurrator;
-    mapping(address => User) userKeys;
+    mapping(address => User) public userKeys;
 
     uint256 _tokenNonce;
     MockPolicyManager _policyManager;
@@ -46,6 +46,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
 
     event TokenStatusChanged(uint256 tokenId, bool forSale, uint256 salePrice);
     event RequestBuy(uint256 tokenId, address buyer);
+    event UserRegestered(address user, bytes pub_key, bytes enc_key);
 
     constructor(address[] memory currators, MockPolicyManager policyManager_) {
         // register the supported interfaces to conform to ERC1155 via ERC165
@@ -99,8 +100,17 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         return batchBalances;
     }
 
-    function RegisterUser(string memory encKey, string memory sigKey ) public {
+    function RegisterUser(
+        address user,
+        bytes memory pub_key,
+        bytes memory enc_key
+    ) public {
+        if (user == address(0)) {
+            user = msg.sender;
+        }
 
+        userKeys[user] = User(pub_key, enc_key);
+        emit UserRegestered(user, pub_key, enc_key);
     }
 
     // Can mint and immediately offer for sale
@@ -215,7 +225,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
             "MST: Insufficient Escrow"
         );
 
-        console.log("Revoking old policy");
+        // console.log("Revoking old policy");
 
         // Revoke old policy
 
@@ -238,7 +248,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         // 1 years from now
         uint64 _newEndTimestamp = uint64(block.timestamp.add(_deltaTime));
 
-        console.log(_nodes[1]);
+        // console.log(_nodes[1]);
 
         _policyManager.createPolicy{value: policyPayment}(
             _newPolicyId,

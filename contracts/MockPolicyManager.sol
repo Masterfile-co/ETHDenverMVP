@@ -2,7 +2,7 @@
 pragma solidity ^0.7.0;
 
 // import "./interfaces/IMockPolicyManager.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract MockPolicyManager {
     
@@ -20,14 +20,14 @@ contract MockPolicyManager {
         uint64 _endTimestamp,
         address[] calldata _nodes
     ) external payable {
-        console.log("Policy Created");
+        // console.log("Policy Created");
     }
 
     function revokePolicy(bytes16 _policyId)
         external
         returns (uint256 refundValue)
     {
-        console.log("Policy Revoked");
+        // console.log("Policy Revoked");
 
         return 0;
     }
