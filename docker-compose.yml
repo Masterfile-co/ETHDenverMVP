@@ -1,0 +1,10 @@
+version: "3.1"
+services:
+  currator:
+    build: ./server
+    container_name: "currator"
+    env_file:
+      - server/.env
+    ports:
+      - "5000:5000"
+    # restart: always

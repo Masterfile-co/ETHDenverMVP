@@ -28,7 +28,7 @@ module.exports = {
     ],
   },
   paths: {
-    // artifacts: "./client/src/artifacts",
+    artifacts: "./artifacts",
   },
   networks: {
     hardhat: {

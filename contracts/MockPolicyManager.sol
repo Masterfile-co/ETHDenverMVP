@@ -4,7 +4,7 @@ pragma solidity ^0.7.0;
 // import "./interfaces/IMockPolicyManager.sol";
 import "hardhat/console.sol";
 
-contract PolicyManager {
+contract MockPolicyManager {
     
     struct Range {
         uint128 min;
@@ -21,7 +21,6 @@ contract PolicyManager {
         address[] calldata _nodes
     ) external payable {
         console.log("Policy Created");
-        console.log(_nodes[0]);
     }
 
     function revokePolicy(bytes16 _policyId)

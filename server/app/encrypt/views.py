@@ -14,13 +14,16 @@ import os
 from uuid import uuid4
 import json
 
+# NuCypher initiation ---------------------------------
+
 from nucypher.characters.lawful import Ursula, Alice, Bob
 from nucypher.config.constants import TEMPORARY_DOMAIN
 from nucypher.config.keyring import NucypherKeyring
 
 SESSION_ID = os.getenv("SESSION_ID")
 
-SEEDNODE_URI = "localhost:11500"
+# "localhost:11500"
+SEEDNODE_URI = os.getenv("SEEDNODE_URI") 
 ursula = Ursula.from_seed_and_stake_info(seed_uri=SEEDNODE_URI,
                                          federated_only=True,
                                          minimum_stake=0)
@@ -54,6 +57,20 @@ formats = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif"}
 
 base_uri = "https://hub.textile.io/ipns/bafzbeibtbalzgi3nb4yiej47mcaajsd6xcn6m3avygg6ycq67z3fulzw5e/"
 
+
+# Web 3 initiation
+
+from web3 import Web3, HTTPProvider, eth
+
+# http://host.docker.internal:8545
+SEEDNODE_URI = os.getenv("BLOCKCHAIN_URI") 
+w3 = Web3(HTTPProvider("http://localhost:8545/"))
+# w3.eth.default_account = w3.eth.accounts[0]
+
+# masterfile_contract = w3.eth.contract(address="0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", abi="./interfaces/Masterfile.json")
+# print(masterfile_contract.caller().tokenNonce())
+print(w3.isConnected())
+
 class EncryptView(MethodView):
 
     def post(self):
@@ -68,6 +85,14 @@ class EncryptView(MethodView):
                 }
 
                 make_response(jsonify(response)), 404
+
+        if not request.data["name"] or not request.data["description"] or not request.data["creator"]:
+            
+            response = {
+                    'message': "Insufficient data attached"
+                }
+
+            make_response(jsonify(response)), 404
 
         filename = str(uuid4())
 

@@ -5,28 +5,20 @@ async function main() {
   const account = await accounts[0].getAddress();
 
   if (hre.network.name === "hardhat" || hre.network.name === "localhost") {
-    // let Mock = await ethers.getContractFactory("MockPolicyManager");
-    // let mock = await Mock.deploy();
-    // await mock.deployed();
+    let Mock = await ethers.getContractFactory("MockPolicyManager");
+    let mock = await Mock.deploy();
+    await mock.deployed();
 
-    // console.log(`Policy Manager deployed to ${mock.address}`);
+    console.log(`Policy Manager deployed to ${mock.address}`);
 
-    // let StakingEscrow = await ethers.getContractFactory("MockStakingEscrow");
-    // let escrow = await StakingEscrow.deploy();
-    // await escrow.deployed();
-
-    // console.log(`Policy Manager deployed to ${escrow.address}`);
 
     let Masterfile = await ethers.getContractFactory("Masterfile");
-    // let masterfile = await Masterfile.deploy(
-    //   [account],
-    //   mock.address,
-    //   escrow.address
-    // );
+
 
     let masterfile = await Masterfile.deploy(
       [account],
-      "0x67E4A942c067Ff25cE7705B69C318cA2Dfa54D64",
+      // "0x67E4A942c067Ff25cE7705B69C318cA2Dfa54D64",
+      mock.address,
     );
 
     await masterfile.deployed();

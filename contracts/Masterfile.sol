@@ -2,10 +2,11 @@
 pragma solidity ^0.7.6;
 pragma abicoder v2;
 
-import "./Interfaces/ERC165.sol";
-import "./Interfaces/IERC1155.sol";
-import "./Interfaces/IERC1155MetadataURI.sol";
-import "./Interfaces/IPolicyManager.sol";
+import "./interfaces/ERC165.sol";
+import "./interfaces/IERC1155.sol";
+import "./interfaces/IERC1155MetadataURI.sol";
+// import "./interfaces/IPolicyManager.sol";
+import "./MockPolicyManager.sol";
 
 import "./utils/SafeMath.sol";
 
@@ -28,7 +29,8 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     struct User {
-        string 
+        string pub_key;
+        string enc_key;
     }
 
     // Mapping from token ID to account balances
@@ -36,16 +38,16 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     mapping(address => uint256) public escrowedEth;
     mapping(uint256 => MST) public tokenData;
     mapping(address => bool) isCurrator;
-    mapping(address => )
+    mapping(address => User) userKeys;
 
     uint256 _tokenNonce;
-    IPolicyManager _policyManager;
+    MockPolicyManager _policyManager;
     uint256 fee; // read from policyManager
 
     event TokenStatusChanged(uint256 tokenId, bool forSale, uint256 salePrice);
     event RequestBuy(uint256 tokenId, address buyer);
 
-    constructor(address[] memory currators, IPolicyManager policyManager_) {
+    constructor(address[] memory currators, MockPolicyManager policyManager_) {
         // register the supported interfaces to conform to ERC1155 via ERC165
         _registerInterface(type(IERC1155).interfaceId);
 
@@ -271,7 +273,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     }
 
     // -- Admin --
-    function updatePolicyManager(IPolicyManager policyManager_)
+    function updatePolicyManager(MockPolicyManager policyManager_)
         external
         onlyCurrator
     {
