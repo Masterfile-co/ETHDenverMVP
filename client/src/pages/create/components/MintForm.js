@@ -2,14 +2,17 @@ import React, { useState } from "react";
 import { useReactiveVar } from "@apollo/client";
 import axios from "axios";
 import { useSnackbar } from "notistack";
+import { useHistory } from "react-router-dom";
 
 import { signerVar, contractVar, accountVar } from "../../../cache";
 
 export default function MintForm() {
+  const history = useHistory();
   let contract = useReactiveVar(contractVar);
   let signer = useReactiveVar(signerVar);
   let account = useReactiveVar(accountVar);
   const { enqueueSnackbar } = useSnackbar();
+  const [loadingState, setLoadingState] = useState("Create Masterfile");
   const [artwork, setArtwork] = useState(null);
   const [state, setstate] = useState({
     name: "",
@@ -29,6 +32,15 @@ export default function MintForm() {
   };
 
   const handleSubmit = async () => {
+    if (!account) {
+      enqueueSnackbar(`Please connect wallet and sign in`, {
+        variant: "warning",
+      });
+      return;
+    }
+
+    setLoadingState("Encrypting File");
+
     // Format data to send via POST
 
     const form = new FormData();
@@ -47,6 +59,7 @@ export default function MintForm() {
     axios
       .post("http://localhost:5000", form, config)
       .then(async (res) => {
+        setLoadingState("Minting Artwork");
         // Receive uri from server
         let uri = res.data.uri;
 
@@ -56,6 +69,11 @@ export default function MintForm() {
         enqueueSnackbar(`Check your collection!`, {
           variant: "success",
         });
+        setLoadingState("Create Masterfile");
+        setstate({ name: "", description: "", first_name: "", last_name: "" });
+        setArtwork(null);
+
+        history.push("/collection");
       })
       .catch((err) => {
         console.log(err);
@@ -199,7 +217,7 @@ export default function MintForm() {
             disabled={false}
             onClick={handleSubmit}
           >
-            Create Masterfile
+            {loadingState}
           </button>
         </span>
       </div>
