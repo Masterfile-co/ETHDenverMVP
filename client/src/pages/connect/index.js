@@ -53,6 +53,8 @@ export default function Connect() {
 
     if (!account) {
       await initWeb3(pushPassword);
+    } else {
+      pushPassword(account);
     }
 
     // check if length of password > 16 characters

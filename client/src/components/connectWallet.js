@@ -82,17 +82,10 @@ export async function initWeb3(callback = null) {
     const account = await signer.getAddress();
 
     accountVar(account);
+    if (callback) {
+      callback(account);
+    }
 
-    callback(account);
-
-    // var subscriptionV1 = new ethers.Contract(
-    //   process.env.REACT_APP_GRAPHQL_SUB_CONTRACT,
-    //   Qualla.abi,
-    //   signer
-    // );
-
-    // subscriptionV1 = subscriptionV1.connect(signer);
-    // subscriptionVar(subscriptionV1);
   } catch (error) {
     console.error(error);
   }

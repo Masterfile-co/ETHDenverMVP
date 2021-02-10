@@ -83,6 +83,12 @@ export default function MintForm() {
       });
   };
 
+  async function testMint() {
+
+    await contract.MintNFT(account, "2dc9a903-1fb4-4854-820c-c40cb9673d03", false, 0);
+
+  }
+
   return (
     <form
       className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 sm:gap-x-8"
@@ -216,6 +222,7 @@ export default function MintForm() {
             type="button"
             disabled={false}
             onClick={handleSubmit}
+            // onClick={testMint}
           >
             {loadingState}
           </button>
