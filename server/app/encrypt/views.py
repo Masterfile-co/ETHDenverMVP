@@ -14,6 +14,7 @@ import os
 from uuid import uuid4
 import json
 import sys
+import time
 
 # NuCypher initiation ---------------------------------
 
@@ -72,7 +73,7 @@ with open("./interfaces/Masterfile.json") as f:
     info_json = json.load(f)
 abi = info_json["abi"]
 
-masterfile_contract = w3.eth.contract(address="0xB8485421abC325D172652123dBd71D58b8117070", abi=abi)
+masterfile_contract = w3.eth.contract(address="0x86f0c5Bd13925c55c591CB1a215Bee5bfd11d143", abi=abi)
 
 masterfile_contract.functions.userKeys("0x0000000000000000000000000000000000000000").call()
 
@@ -106,6 +107,8 @@ class LoginView(MethodView):
                         'message': "Registration Accepted"
                     }
 
+            keyring.lock()
+
             return make_response(jsonify(response)), 200
             
         except:
@@ -123,6 +126,7 @@ class LoginView(MethodView):
                 response = {
                         'message': "Login Successful"
                     }
+                keyring.lock()
 
                 return make_response(jsonify(response)), 200
 
@@ -138,16 +142,21 @@ class EncryptView(MethodView):
 
     def post(self):
         "User should post file and encryption keys for Enrico to encrypt. This should upload encrypted file and metadat to textile"
-        
-        if request.files:
-            image = request.files["artwork"]
-            if not image:
 
-                response = {
+ 
+
+        try: 
+            image = request.files["artwork"]
+        
+        except: 
+
+            print("no image")
+            response = {
                     'message': "No File Attached"
                 }
 
-                return make_response(jsonify(response)), 404
+            return make_response(jsonify(response)), 404
+                
 
         if not request.data["name"] or not request.data["description"] or not request.data["creator"]:
             
@@ -199,6 +208,7 @@ class EncryptView(MethodView):
             "name": request.data["name"],
             "creator": request.data["creator"],
             "description": request.data["description"],
+            "timestamp": time.time() ,
             "properties": {
                 "masterfile": base_uri+filename+formats[frmt],
                 "thumbnail":  base_uri+filename+"_thumbnail"+formats[frmt],

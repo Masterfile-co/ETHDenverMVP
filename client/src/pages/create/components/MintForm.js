@@ -1,11 +1,19 @@
 import React, { useState } from "react";
+import { useReactiveVar } from "@apollo/client";
 import axios from "axios";
+import { useSnackbar } from "notistack";
+
+import { signerVar, contractVar, accountVar } from "../../../cache";
 
 export default function MintForm() {
+  let contract = useReactiveVar(contractVar);
+  let signer = useReactiveVar(signerVar);
+  let account = useReactiveVar(accountVar);
+  const { enqueueSnackbar } = useSnackbar();
+  const [artwork, setArtwork] = useState(null);
   const [state, setstate] = useState({
     name: "",
     description: "",
-    artwork: "",
     first_name: "",
     last_name: "",
   });
@@ -16,19 +24,45 @@ export default function MintForm() {
     setstate(temp);
   };
 
-  const handleSubmit = () => {
+  const handleFile = (event) => {
+    setArtwork(event.target.files[0]);
+  };
+
+  const handleSubmit = async () => {
     // Format data to send via POST
 
+    const form = new FormData();
     let data = { ...state };
+    form.append("creator", state.last_name + ", " + state.first_name);
+    form.append("name", state.name);
+    form.append("description", state.description);
+    form.append("artwork", artwork);
 
-    data["creator"] = state.last_name + ", " + state.first_name;
+    let config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    };
 
-    axios.post("http://localhost:5000", { state }).then((res) => {
-      // Receive uri from server
-      let uri = res.data.uri;
+    axios
+      .post("http://localhost:5000", form, config)
+      .then(async (res) => {
+        // Receive uri from server
+        let uri = res.data.uri;
 
-      // Mint token
-    });
+        // Mint token
+        await contract.MintNFT(account, uri, false, 0);
+
+        enqueueSnackbar(`Check your collection!`, {
+          variant: "success",
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        enqueueSnackbar(`${err.message}`, {
+          variant: "error",
+        });
+      });
   };
 
   return (
@@ -105,7 +139,7 @@ export default function MintForm() {
             id="artwork"
             name="artwork"
             autoComplete="artwork"
-            onChange={handleChange}
+            onChange={handleFile}
           />
         </div>
       </div>
@@ -121,7 +155,7 @@ export default function MintForm() {
           <textarea
             className="py-3 px-4 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 border-gray-300 rounded-md"
             id="message"
-            name="message"
+            name="description"
             rows="4"
             onChange={handleChange}
           ></textarea>

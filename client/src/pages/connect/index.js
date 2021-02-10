@@ -1,33 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useHistory } from "react-router-dom";
+import { useSnackbar } from "notistack";
 
+import { initWeb3 } from "../../components/connectWallet";
 import Logo from "../../images/Masterfile-LogoSymbol-Purple.png";
 import { Helmet } from "react-helmet";
+import { useReactiveVar } from "@apollo/client";
+import { accountVar } from "../../cache";
 
 export default function Connect() {
   const [state, setState] = useState("");
   const [password, setPassword] = useState("");
+  const account = useReactiveVar(accountVar);
+  const history = useHistory();
+  const { enqueueSnackbar } = useSnackbar();
 
   const handleChange = (event) => {
     setPassword(event.target.value);
   };
 
-  const handleSubmit = () => {
-    setState("Processing");
-
-    // check if length of password > 16 characters
-
+  const pushPassword = (accountAddress) => {
+    // console.log(password);
+    // console.log(account);
     axios
       .post("http://localhost:5000/login", {
         password,
-        //account
+        account: accountAddress,
       })
       .then((res) => {
+        console.log(res);
         // Store password locally
-        localStorage.setItem("Password", password);
-
-        // Mint token
+        enqueueSnackbar(`${res.data.message}`, {
+          variant: "success",
+        });
+        console.log(res);
+        localStorage.setItem(`PW-${account}`, password);
+        setState("");
+        setPassword("");
+        history.push("/");
+      })
+      .catch((err) => {
+        console.log(err);
+        enqueueSnackbar(`${err.message}`, {
+          variant: "error",
+        });
       });
+  };
+
+  const handleSubmit = async () => {
+    setState("Processing");
+
+    if (!account) {
+      await initWeb3(pushPassword);
+    }
+
+    // check if length of password > 16 characters
+    // if (!account) {
+    //   console.log("Connect Account first");
+    //   return;
+    // }
   };
 
   return (
@@ -52,8 +84,8 @@ export default function Connect() {
             </span>
           </p>
         </div>
-        <form class="mt-8">
-          <input type="hidden" name="remember" value="true" />
+        <div class="mt-8">
+          <input type="hidden" name="remember" />
           <div class="rounded-md shadow-sm">
             <div class="-mt-px">
               <input
@@ -70,8 +102,8 @@ export default function Connect() {
           <div class="mt-6">
             <button
               class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition duration-150 ease-in-out"
-              type="submit"
               onClick={handleSubmit}
+              // disabled={password.length < 16}
             >
               <span class="absolute left-0 inset-y-0 flex items-center pl-3">
                 <svg
@@ -91,7 +123,7 @@ export default function Connect() {
               </span>
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

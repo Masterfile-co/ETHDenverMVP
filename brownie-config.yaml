@@ -7,7 +7,7 @@ networks:
   default: development
   development:
     cmd_settings:
-      mnemonic: hill law jazz limb penalty escape public dish stand bracket blue jar
+      mnemonic: boss track slice demise into boy blanket rigid hill trust run awake
 
 # enable output of development artifacts to load with react
 dev_deployment_artifacts: true

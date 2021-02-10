@@ -1,7 +1,25 @@
-import React from "react";
+import { useReactiveVar } from "@apollo/client";
+import React, { useEffect } from "react";
+
+import { web3Modal, initWeb3 } from "./connectWallet";
+
+import { accountVar } from "../cache";
 import Logo from "../images/Masterfile-LogoSymbol-Purple.png";
 
 export default function Topbar() {
+  let account = useReactiveVar(accountVar);
+
+  async function _init() {
+    if (web3Modal.cachedProvider) {
+      initWeb3();
+    }
+  }
+
+  useEffect(() => {
+    _init();
+    // eslint-disable-next-line
+  }, []);
+
   return (
     <nav className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -39,7 +57,7 @@ export default function Topbar() {
                 className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150"
                 href="/connect"
               >
-                Connect Wallet
+                {account ? account : "Connect Wallet"}
               </a>
             </div>
           </div>

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@apollo/client": "^3.3.9",
     "@craco/craco": "^6.1.1",
+    "@material-ui/core": "^4.11.3",
     "@tailwindcss/aspect-ratio": "^0.2.0",
     "@tailwindcss/forms": "^0.2.1",
     "@tailwindcss/postcss7-compat": "^2.0.3",
@@ -13,6 +15,10 @@
     "@testing-library/user-event": "^12.1.10",
     "autoprefixer": "9",
     "axios": "^0.21.1",
+    "ethers": "^5.0.30",
+    "form-data": "^3.0.0",
+    "graphql": "^15.5.0",
+    "notistack": "^1.0.3",
     "postcss": "7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -20,7 +26,8 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.2",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat",
-    "web-vitals": "^1.0.1"
+    "web-vitals": "^1.0.1",
+    "web3modal": "^1.9.3"
   },
   "scripts": {
     "start": "craco start",
