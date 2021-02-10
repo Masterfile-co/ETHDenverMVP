@@ -1,7 +1,7 @@
 import { ApolloClient, InMemoryCache, makeVar } from "@apollo/client";
 
 export const client = new ApolloClient({
-  uri: "https://localhost:8000",
+  uri: "http://127.0.0.1:8000/subgraphs/name/ghardin1314/Masterfile-EthDenver",
   cache: new InMemoryCache(),
 });
 

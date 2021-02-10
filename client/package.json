@@ -18,6 +18,7 @@
     "ethers": "^5.0.30",
     "form-data": "^3.0.0",
     "graphql": "^15.5.0",
+    "moment": "^2.29.1",
     "notistack": "^1.0.3",
     "postcss": "7",
     "react": "^17.0.1",

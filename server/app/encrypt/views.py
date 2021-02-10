@@ -230,7 +230,7 @@ class EncryptView(MethodView):
 
         response = {
                 'message': "Upload Complete",
-                'uri': base_uri + filename + "_metadata.json"
+                'uri': filename
             }
 
         return make_response(jsonify(response)), 200

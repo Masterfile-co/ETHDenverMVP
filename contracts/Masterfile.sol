@@ -176,7 +176,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
 
         // fee for 3 nodes for 1 year
 
-        uint256 policyCost = fee.mul(365).mul(3);
+        // uint256 policyCost = fee.mul(365).mul(3);
 
         require(
             msg.value == _token.salePrice.add(policyCost),

@@ -1,7 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet";
 import Card from "./components/Card";
 import Header from "./components/Header";
+import { GET_USER_COLLECTION } from "./queries";
+import { useQueryWithAccount } from "../../hooks";
+import SellModal from "../../components/SellModal";
+import { useReactiveVar } from "@apollo/client";
+import { contractVar } from "../../cache";
+import { ethers } from "ethers";
+import { useSnackbar } from "notistack";
 
 const MockData = [
   {
@@ -23,8 +30,46 @@ const MockData = [
 ];
 
 export default function Collection() {
+  const { data } = useQueryWithAccount(GET_USER_COLLECTION);
+  let [modalOpen, setModalOpen] = useState(false);
+  let [sale, setSale] = useState({ id: null, salePrice: 0 });
+  const { enqueueSnackbar } = useSnackbar();
+  let contract = useReactiveVar(contractVar);
+
+  async function handleSell() {
+    contract
+      .OfferForSale(
+        sale.id,
+        ethers.utils.parseEther(sale.salePrice.toString()).toString()
+      )
+      .then((res) => {
+        enqueueSnackbar(`Successfully offered for sale!`, {
+          variant: "success",
+        });
+        setSale = { id: null, salePrice: 0 };
+        setModalOpen(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        enqueueSnackbar(`${err.data.message}`, {
+          variant: "error",
+        });
+      });
+  }
+
   return (
     <div class="py-10">
+      {modalOpen ? (
+        <SellModal
+          sale={sale}
+          setSale={setSale}
+          handleSell={handleSell}
+          onCancel={() => {
+            setModalOpen(false);
+          }}
+        />
+      ) : null}
+
       <Helmet>
         <meta charSet="utf-8" />
         <title>Masterfile | Collection</title>
@@ -34,13 +79,15 @@ export default function Collection() {
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div class="px-4 py-8 sm:px-0">
             <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {MockData.map((work, key) => (
+              {data?.msts?.map((work, key) => (
                 <Card
-                  title={work.title}
-                  artist={work.artist}
-                  thumbnail={work.thumbnail}
-                  timestamp={work.timestamp}
-                  purchasePrice={work.purchasePrice}
+                  key={key}
+                  forSale={work.forSale}
+                  uri={work.uri}
+                  id={work.id}
+                  setModalOpen={setModalOpen}
+                  sale={sale}
+                  setSale={setSale}
                 />
               ))}
             </ul>

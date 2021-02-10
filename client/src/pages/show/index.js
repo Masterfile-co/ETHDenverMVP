@@ -5,7 +5,8 @@ import Header from "./components/Header";
 import Gaberiel from "../../images/gabrielsmall-Recovered.png";
 import Dive from "../../images/GirlsclubAsia-Illustrator-Yuko-Shimizu-sva_poster3_dive_print_size.jpg";
 import Card from "./components/Card";
-
+import { useQuery } from "@apollo/client";
+import { GET_FOR_SALE } from "./queries";
 
 const MockData = [
   {
@@ -27,6 +28,10 @@ const MockData = [
 ];
 
 export default function Show() {
+  let { data } = useQuery(GET_FOR_SALE);
+
+  console.log(data);
+
   return (
     <div class="py-10">
       <Helmet>
@@ -38,14 +43,14 @@ export default function Show() {
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div class="px-4 py-8 sm:px-0">
             <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {MockData.map((work, key) => (
+              {data?.msts?.map((work, key) => (
                 <Card
                   key={key}
-                  title={work.title}
-                  artist={work.artist}
-                  thumbnail={work.thumbnail}
-                  timestamp={work.timestamp}
-                  purchasePrice={work.purchasePrice}
+                  uri={work.uri}
+                  id={work.id}
+                  purchasePrice={work.salePrice}
+                  // offered={work.offeringBuyer ? true : false}
+                  offered={false}
                 />
               ))}
             </ul>
