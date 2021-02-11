@@ -1,6 +1,9 @@
 import React from "react";
+import moment from "moment";
+import { ethers } from "ethers";
 
-export default function InfoCard() {
+export default function InfoCard({ mst, purchasePrice }) {
+  console.log(mst);
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <div className="px-4 py-5 border-b border-gray-200 sm:px-6">
@@ -18,7 +21,7 @@ export default function InfoCard() {
               Full name
             </dt>
             <dd className="mt-1 text-sm leading-5 text-gray-900 sm:mt-0 sm:col-span-2">
-              Yuko Shimizu
+              {mst?.creator}
             </dd>
           </div>
           <div className="mt-8 sm:mt-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:border-t sm:border-gray-200 sm:px-6 sm:py-5">
@@ -26,7 +29,7 @@ export default function InfoCard() {
               Masterfile Created
             </dt>
             <dd className="mt-1 text-sm leading-5 text-gray-900 sm:mt-0 sm:col-span-2">
-              February 14th 2021
+              {moment.unix(mst?.timestamp).format("MMMM Do YYYY")}
             </dd>
           </div>
           <div className="mt-8 sm:mt-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:border-t sm:border-gray-200 sm:px-6 sm:py-5">
@@ -34,11 +37,7 @@ export default function InfoCard() {
               Description
             </dt>
             <dd className="mt-1 text-sm leading-5 text-gray-900 sm:mt-0 sm:col-span-2">
-              Fugiat ipsum ipsum deserunt culpa aute sint do nostrud anim
-              incididunt cillum culpa consequat. Excepteur qui ipsum aliquip
-              consequat sint. Sit id mollit nulla mollit nostrud in ea officia
-              proident. Irure nostrud pariatur mollit ad adipisicing
-              reprehenderit deserunt qui eu.
+              {mst?.description}
             </dd>
           </div>
           <div className="mt-8 sm:mt-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:border-t sm:border-gray-200 sm:px-6 sm:py-5">
@@ -46,7 +45,7 @@ export default function InfoCard() {
               Purchase Price
             </dt>
             <dd className="mt-1 text-sm leading-5 text-gray-900 sm:mt-0 sm:col-span-2">
-              10 ETH
+              {ethers.utils.formatEther(purchasePrice)} ETH
             </dd>
           </div>
         </dl>

@@ -5,6 +5,7 @@ import { web3Modal, initWeb3 } from "./connectWallet";
 
 import { accountVar } from "../cache";
 import Logo from "../images/Masterfile-LogoSymbol-Purple.png";
+import { Link } from "react-router-dom/cjs/react-router-dom.min";
 
 export default function Topbar() {
   let account = useReactiveVar(accountVar);
@@ -30,35 +31,35 @@ export default function Topbar() {
               <img className="hidden lg:block h-8 w-auto" src={Logo} alt="" />
             </div>
             <div className="hidden sm:-my-px sm:ml-6 sm:flex">
-              <a
+              <Link
                 selected
                 className="ml-8 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
-                href="/"
+                to="/"
               >
                 Create
-              </a>
-              <a
+              </Link>
+              <Link
                 className="ml-8 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
-                href="/collection"
+                to="/collection"
               >
                 Collection
-              </a>
-              <a
+              </Link>
+              <Link
                 className="ml-8 inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out"
-                href="/show"
+                to="/show"
               >
                 Show
-              </a>
+              </Link>
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             <div className="w-full flex rounded-md shadow-sm">
-              <a
+              <Link
                 className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-indigo-700 transition ease-in-out duration-150"
-                href="/connect"
+                to="/connect"
               >
                 {account ? account : "Connect Wallet"}
-              </a>
+              </Link>
             </div>
           </div>
         </div>

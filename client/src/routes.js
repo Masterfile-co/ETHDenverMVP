@@ -11,7 +11,7 @@ const BaseRouter = () => (
     <Route path="/connect" component={Connect} />
     <Route path="/show" component={Show} />
     <Route path="/collection" component={Collection} />
-    <Route path="/view" component={View} />
+    <Route path="/view/:tokenId" component={View} />
     <Route path="/" exact component={Create} />
   </Switch>
 );

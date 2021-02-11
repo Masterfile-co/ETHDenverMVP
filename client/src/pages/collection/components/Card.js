@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import moment from "moment";
+import { Link } from "react-router-dom";
 
 export default function Card({
   uri,
@@ -13,13 +14,11 @@ export default function Card({
   let [data, setData] = useState(null);
 
   useEffect(() => {
-
     axios
       .get(process.env.REACT_APP_BUCKET_URL + uri + "_metadata.json")
       .then((res) => {
         setData(res.data);
       });
-
   }, []);
 
   async function handleSell() {
@@ -55,12 +54,12 @@ export default function Card({
         <div class="border-t border-gray-200">
           <div class="-mt-px flex">
             <div class="w-0 flex-1 flex border-r border-gray-200">
-              <a
+              <Link
                 class="relative -mr-px w-0 flex-1 inline-flex items-center justify-center py-4 text-sm leading-5 text-gray-700 font-medium border border-transparent hover:text-gray-500 focus:outline-none focus:shadow-outline-blue focus:border-blue-300 focus:z-10 transition ease-in-out duration-150"
-                href="/view"
+                to={`/view/${id}`}
               >
                 <span class="ml-3">Open</span>
-              </a>
+              </Link>
             </div>
             <div class="-ml-px w-0 flex-1 flex">
               <button
