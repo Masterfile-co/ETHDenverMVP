@@ -15,6 +15,9 @@ from uuid import uuid4
 import json
 import sys
 import time
+from threading import Thread
+from eth_abi import encode_abi
+from Crypto import Random
 
 # NuCypher initiation ---------------------------------
 
@@ -75,7 +78,64 @@ abi = info_json["abi"]
 
 masterfile_contract = w3.eth.contract(address="0x86f0c5Bd13925c55c591CB1a215Bee5bfd11d143", abi=abi)
 
-masterfile_contract.functions.userKeys("0x0000000000000000000000000000000000000000").call()
+# Listen for Sale Offer events
+
+def onRequestBuy(event):
+    # print(event)
+    user = event.args["buyer"]
+    keys = masterfile_contract.functions.userKeys(user).call()
+    tokenId = event.args["tokenId"]
+    token = masterfile_contract.functions.tokenData(tokenId).call()
+    print(user)
+    print(token)
+
+    # Call token transfer
+
+    label = str(tokenId)+os.urandom(4).hex()
+
+    # using fake policy id
+    compiled_data = encode_abi(
+        ['bytes16', 'uint256', 'string', 'address[]'],
+        [Random.new().read(16), 432000, label,
+        ["0x9920328f8D239613cDfFea4578e37d843772738F", "0xf71C4fbb1D0a85ded90c58fF347a026E6b8146AC", "0xC11F4fAa477b1634369153c8654eEF581425AD15"]
+        ])
+
+    masterfile_contract.functions.safeTransferFrom(token[0], user, tokenId, 1, compiled_data).transact({'from': w3.eth.accounts[0]})
+
+    # Distribute kfrags
+
+    bob = Bob.from_public_keys(verifying_key=keys[0], encrypting_key=keys[1], federated_only=True)
+    policy = alice.grant(
+        bob,
+        label=label.encode(),
+        m=2,
+        n=3,
+        expiration = maya.now() + timedelta(days=5)
+    )
+    policy.treasure_map_publisher.block_until_complete()
+    print("Policy {} was created".format(label))
+
+loggedEvents = []
+
+def log_loop(event_filter, poll_interval):
+    print("Running Loop")
+    
+    while True:
+        events_duplicated = event_filter.get_new_entries()
+        events=[]
+        for event in events_duplicated:
+            if event.transactionHash not in loggedEvents:
+                events.append(event)
+                loggedEvents.append(event.transactionHash)
+        for event in events:
+            onRequestBuy(event)
+        time.sleep(poll_interval)
+
+print("Starting filter")
+
+myFilter = masterfile_contract.events.RequestBuy.createFilter(fromBlock="latest", topics= [])
+worker = Thread(target=log_loop, args=(myFilter, 2), daemon=True)
+worker.start()
 
 class LoginView(MethodView):
 

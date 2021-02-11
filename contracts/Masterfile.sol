@@ -22,6 +22,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     struct MST {
         address payable owner;
         string uri_;
+        string policyLabel;
         bool forSale;
         uint256 salePrice;
         bytes16 policyId;
@@ -61,6 +62,11 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
 
         _policyManager = policyManager_;
         fee = 50000000000;
+    }
+
+    function getUserKeys(address user) public view returns (bytes memory pub_key, bytes memory enc_key){
+        User memory _user = userKeys[user];
+        return (_user.pub_key, _user.enc_key);
     }
 
     // ---------------------- Getters -----------------------------------------
@@ -127,6 +133,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         tokenData[_tokenNonce] = MST(
             owner,
             uri_,
+            "",
             forSale,
             salePrice,
             bytes16(0),
@@ -169,17 +176,17 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     function requestBuy(uint256 tokenId) external payable {
         MST memory _token = tokenData[tokenId];
 
-        require(msg.sender != _token.owner, "MST: Already Owned");
-        require(_token.forSale, "MST: Not for sale");
-        require(_token.offer.buyer == address(0), "MST: Exsisting Offer");
-        // TODO: Calculate cost of policy and include in this amount
+        // require(msg.sender != _token.owner, "MST: Already Owned");
+        // require(_token.forSale, "MST: Not for sale");
+        // require(_token.offer.buyer == address(0), "MST: Exsisting Offer");
 
-        // fee for 3 nodes for 1 year
 
-        // uint256 policyCost = fee.mul(365).mul(3);
+        // // fee for 3 nodes for 1 year
+
+        uint256 policyCost = fee.mul(365).mul(3);
 
         require(
-            msg.value == _token.salePrice.add(policyCost),
+            msg.value >= _token.salePrice.add(policyCost),
             "MST: Insufficient Funds"
         );
 
@@ -238,11 +245,12 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         // destruct policy parameters from data
         bytes16 _newPolicyId;
         uint256 _deltaTime;
+        string memory _label;
         address[] memory _nodes = new address[](3); // hard coding 3 nodes for now
 
-        (_newPolicyId, _deltaTime, _nodes) = abi.decode(
+        (_newPolicyId, _deltaTime, _label, _nodes) = abi.decode(
             data,
-            (bytes16, uint256, address[])
+            (bytes16, uint256, string, address[])
         );
 
         // 1 years from now
@@ -268,6 +276,7 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
         tokenData[id] = MST(
             payable(to),
             _token.uri_,
+            _label,
             false,
             _token.salePrice,
             _newPolicyId,
