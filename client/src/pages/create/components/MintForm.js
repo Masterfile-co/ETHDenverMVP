@@ -74,7 +74,7 @@ export default function MintForm() {
         setstate({ name: "", description: "", first_name: "", last_name: "" });
         setArtwork(null);
 
-        history.push("/collection");
+        // history.push("/collection");
       })
       .catch((err) => {
         console.log(err);

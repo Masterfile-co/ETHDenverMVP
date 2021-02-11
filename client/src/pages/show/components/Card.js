@@ -56,11 +56,11 @@ export default function Card({ uri, id, purchasePrice, offered }) {
           <dt className="sr-only">Artist</dt>
           <dd className="text-gray-500 text-sm leading-5">{data?.creator}</dd>
           <dt className="sr-only">Title</dt>
-          <dt className="sr-only">Date of Creation</dt>
+          {/* <dt className="sr-only">Date of Creation</dt>
           <dd className="text-gray-500 text-sm leading-5">
             {moment.unix(data?.timestamp).format("MMMM Do YYYY")}
-          </dd>
-          <dt className="sr-only">Title</dt>
+          </dd> */}
+          {/* <dt className="sr-only">Title</dt> */}
           <dd className="mt-3">
             <span className="px-2 py-1 text-teal-800 text-s leading-4 font-medium bg-teal-100 rounded-full">
               {ethers.utils.formatEther(purchasePrice).toString()} ETH

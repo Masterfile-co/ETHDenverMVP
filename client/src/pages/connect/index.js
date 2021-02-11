@@ -35,6 +35,10 @@ export default function Connect() {
           variant: "success",
         });
         console.log(res);
+        let ur = `PW-${account}`
+        let pw = password
+        console.log(ur)
+        console.log(pw)
         localStorage.setItem(`PW-${account}`, password);
         setState("");
         setPassword("");

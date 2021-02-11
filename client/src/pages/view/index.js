@@ -28,7 +28,7 @@ export default function View() {
     }
   }, [data]);
 
-  // console.log(mst)
+  console.log(mst)
 
   // console.log(data);
 
@@ -38,14 +38,14 @@ export default function View() {
         <meta charSet="utf-8" />
         <title>Masterfile | X by Artist</title>
       </Helmet>
-      <div class="py-10">
+      <div className="py-10">
         <Header title={mst?.name} />
       </div>
       <main>
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div class="px-4 py-8 sm:px-0">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          <div className="px-4 py-8 sm:px-0">
             <InfoCard mst={mst} purchasePrice={data?.mst?.salePrice} />
-            <PictureFame uri={data?.mst?.uri} imgUrl={mst?.properties?.masterfile}/>
+            <PictureFame uri={data?.mst?.uri} imgUrl={mst?.properties?.masterfile} size={mst?.properties?.file?.resolution}/>
           </div>
         </div>
       </main>

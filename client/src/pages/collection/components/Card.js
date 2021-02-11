@@ -44,11 +44,11 @@ export default function Card({
             <dt className="sr-only">Artist</dt>
             <dd className="text-gray-500 text-sm leading-5">{data?.creator}</dd>
             <dt className="sr-only">Title</dt>
-            <dt className="sr-only">Date of Creation</dt>
+            {/* <dt className="sr-only">Date of Creation</dt>
             <dd className="text-gray-500 text-sm leading-5">
               {moment.unix(data?.timestamp).format("MMMM Do YYYY")}
             </dd>
-            <dt className="sr-only">Title</dt>
+            <dt className="sr-only">Title</dt> */}
           </dl>
         </div>
         <div class="border-t border-gray-200">
