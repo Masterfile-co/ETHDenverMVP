@@ -19,3 +19,11 @@ python scripts/init_fed_ursulas.py
 
 To start server:
 cd server && pip install -r requirements.txt && python run.py
+
+Restart Checklist:
+- Delete graph database
+- Delete nucypher keypairs
+- 
+
+
+b'9934f053-32c1-404c-b723-7b4a2ae25692'

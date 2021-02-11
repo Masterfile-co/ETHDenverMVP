@@ -1,7 +1,7 @@
 from . import encrypt_blueprint
 
 from flask.views import MethodView
-from flask import make_response, request, jsonify
+from flask import make_response, request, jsonify, send_file
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,12 +18,14 @@ import time
 from threading import Thread
 from eth_abi import encode_abi
 from Crypto import Random
+import requests
 
 # NuCypher initiation ---------------------------------
 
 from nucypher.characters.lawful import Ursula, Alice, Bob
 from nucypher.config.constants import TEMPORARY_DOMAIN
 from nucypher.config.keyring import NucypherKeyring
+from nucypher.crypto.kits import UmbralMessageKit
 
 SESSION_ID = os.getenv("SESSION_ID")
 BUCKET_ID = os.getenv("BUCKET_ID")
@@ -57,9 +59,12 @@ alice = Alice(
     domain=TEMPORARY_DOMAIN
 )
 
+alice_sig_pubkey = alice.stamp
+
 size = 128, 128
 
 formats = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif"}
+formatsReversed={".jpg": "JPEG", ".png": "PNG", ".gif": "GIF"}
 
 base_uri = "https://hub.textile.io/ipns/" + BUCKET_ID + "/"
 
@@ -87,12 +92,11 @@ def onRequestBuy(event):
     keys = masterfile_contract.functions.userKeys(user).call()
     tokenId = event.args["tokenId"]
     token = masterfile_contract.functions.tokenData(tokenId).call()
+    label = token[2]
     print(user)
     print(token)
 
     # Call token transfer
-
-    label = str(tokenId)+os.urandom(4).hex()
 
     # using fake policy id
     compiled_data = encode_abi(
@@ -104,15 +108,18 @@ def onRequestBuy(event):
     masterfile_contract.functions.safeTransferFrom(token[0], user, tokenId, 1, compiled_data).transact({'from': w3.eth.accounts[0]})
 
     # Distribute kfrags
+    try:
+        bob = Bob.from_public_keys(verifying_key=keys[0], encrypting_key=keys[1], federated_only=True)
+        policy = alice.grant(
+            bob,
+            label=label.encode(),
+            m=2,
+            n=3,
+            expiration = maya.now() + timedelta(days=5)
+        )
+    except:
+        print("policy exsists")
 
-    bob = Bob.from_public_keys(verifying_key=keys[0], encrypting_key=keys[1], federated_only=True)
-    policy = alice.grant(
-        bob,
-        label=label.encode(),
-        m=2,
-        n=3,
-        expiration = maya.now() + timedelta(days=5)
-    )
     policy.treasure_map_publisher.block_until_complete()
     print("Policy {} was created".format(label))
 
@@ -241,9 +248,9 @@ class EncryptView(MethodView):
         thmnl.save("./app/encrypt/bucket/"+filename+"_thumbnail"+formats[frmt], format=frmt)
         #Save to textile
 
-        # create policy from title of artwork
+        # create policy from filename of artwork
 
-        label = request.data["name"].encode()
+        label = filename.encode()
 
         policy_pubkey = alice.get_policy_encrypting_key_from_label(label)
 
@@ -299,15 +306,251 @@ class EncryptView(MethodView):
     def get(self):
         "User should send Bob password to decrypt files"
 
+        try:
+            user = request.args.get("user")
+            pw = request.args.get("password")
+            label = request.args.get("label")
+            imgUrl = request.args.get("imgUrl")
+            frmt = imgUrl[-3:]
+
+        except:
+            response = {
+                'message': "Insufficient Query Params"
+            }
+
+            return make_response(jsonify(response)), 404
+
+        keyringBob = NucypherKeyring(account=user)
+
+        keyringBob.unlock(password=pw)   
+
+        bob = Bob(
+            keyring=keyring,
+            known_nodes=[ursula],
+            federated_only=True,
+            learn_on_same_thread=True,
+            domain=TEMPORARY_DOMAIN
+        )
+
+        bob.join_policy(label.encode(), alice_sig_pubkey)
+
+        from nucypher.characters.lawful import Enrico
+
+        policy_pubkey = alice.get_policy_encrypting_key_from_label(label.encode())
+        enrico = Enrico(policy_encrypting_key=policy_pubkey)
+        data_source_public_key = bytes(enrico.stamp)
+
+
+        enrico1 = Enrico.from_public_keys(
+            verifying_key = data_source_public_key,
+            policy_encrypting_key=policy_pubkey
+        )
+
+        response = requests.get(imgUrl)
+        ciphertext = io.BytesIO(response.content)
+
+        decrypted_plaintext = bob.retrieve(
+            ciphertext,
+            label=label.encode(),
+            enrico=enrico1,
+            alice_verifying_key = alice_sig_pubkey
+        )
+
+        # img = Image.open(decrypted_plaintext, formats=[formatsReversed[frmt]])
+
+        return send_file(io.BytesIO(decrypted_plaintext), mimetype="image/"+frmt, as_attachment=True, attachment_filename='{}.'.format(label)+frmt), 200
+
+globalCipherText = None
+gloablEnrico = None
+globalStorage = {}
+
+class TestView(MethodView):
+
+    def post(self):
+        try: 
+            image = request.files["artwork"]
+        
+        except: 
+
+            print("no image")
+            response = {
+                    'message': "No File Attached"
+                }
+
+            return make_response(jsonify(response)), 404
+                
+
+        if not request.data["name"] or not request.data["description"] or not request.data["creator"]:
+            
+            response = {
+                    'message': "Insufficient data attached"
+                }
+
+            return make_response(jsonify(response)), 404
+
+        filename = str(uuid4())
+
+        # generate thumbnail
+
+        img = Image.open(image.stream)
+
+        frmt = img.format
+        
+        thmnl = img.copy()
+        thmnl.thumbnail(size)
+        thmnl.save("./app/encrypt/bucket/"+filename+"_thumbnail"+formats[frmt], format=frmt)
+        #Save to textile
+
+        # create policy from filename of artwork
+
+        label = filename.encode()
+
+
+        policy_pubkey = alice.get_policy_encrypting_key_from_label(label)
+
+        # encrypt file
+
+        from nucypher.characters.lawful import Enrico
+
+        enrico = Enrico(policy_encrypting_key=policy_pubkey)
+
+        global globalStorage
+        globalStorage[filename] = {"policy_pubkey": policy_pubkey ,"data_source_public_key": bytes(enrico.stamp)}
+
+        buf = io.BytesIO()
+        img.save(buf, format=frmt)
+
+        ciphertext, signature = enrico.encrypt_message(plaintext=buf.getvalue())
+        # upload file and metadata to textile
+
+        global globalCipherText
+        globalCipherText = ciphertext
+
+        f = open("./app/encrypt/bucket/"+filename+formats[frmt], "wb")
+        f.write(ciphertext.to_bytes())
+        f.close()
+
+        # generate metadata from inputs and file
+
+        metadata = {
+            "name": request.data["name"],
+            "creator": request.data["creator"],
+            "description": request.data["description"],
+            "timestamp": time.time() ,
+            "properties": {
+                "masterfile": base_uri+filename+formats[frmt],
+                "thumbnail":  base_uri+filename+"_thumbnail"+formats[frmt],
+                "file": {
+                    "format": frmt,
+                    "size": os.path.getsize("./app/encrypt/bucket/"+filename+formats[frmt]),
+                    "resolution": img.size
+                }
+            }
+        }
+
+        with open("./app/encrypt/bucket/"+filename+"_metadata.json", "w") as outfile:
+            json.dump(metadata, outfile)
+
+
+        os.system("cd app/encrypt/bucket; hub buck push -y --session "+ SESSION_ID)
+
+        # Give access to bob straight away
+
+        try:
+            keyring = NucypherKeyring.generate(
+                checksum_address=request.data["bob_address"],
+                password=request.data["bob_pw"],  # used to encrypt nucypher private keys
+                keyring_root= "//home/ghard/.local/share/nucypher/keyring"
+            )
+        except:
+            # Restore an existing Alice keyring
+            keyring = NucypherKeyring(account=request.data["bob_address"])
+
+        keyring.unlock(password=request.data["bob_pw"])
+
+        bob = Bob(
+            keyring=keyring,
+            known_nodes=[ursula],
+            federated_only=True,
+            learn_on_same_thread=True,
+            domain=TEMPORARY_DOMAIN
+        )
+
+        try:
+            policy = alice.grant(
+                bob,
+                label=label, 
+                m=2,
+                n=3,
+                expiration = maya.now() + timedelta(days=5)
+            )
+
+            policy.treasure_map_publisher.block_until_complete()
+        except:
+            print("policy exsists")
+
+        # # return metadata uri
+
         response = {
-                'message': "Hello World"
+                'message': "Upload Complete",
+                'uri': filename
             }
 
         return make_response(jsonify(response)), 200
 
 
+    def get(self):
+        from nucypher.utilities.logging import GlobalLoggerSettings
+        GlobalLoggerSettings.set_log_level(log_level_name='debug')
+        GlobalLoggerSettings.start_console_logging()
+        user = request.args.get("user")
+        pw = request.args.get("password")
+        label = request.args.get("label")
+        imgUrl = request.args.get("imgUrl")
+        frmt = imgUrl[-3:]
+        
+        keyringBob = NucypherKeyring(account=user)
+
+        keyringBob.unlock(password=pw)   
+
+        bob = Bob(
+            keyring=keyringBob,
+            known_nodes=[ursula],
+            federated_only=True,
+            learn_on_same_thread=True,
+            domain=TEMPORARY_DOMAIN
+        )
+
+        bob.join_policy(label.encode(), alice_sig_pubkey)
+
+        from nucypher.characters.lawful import Enrico
+
+        global globalStorage
+
+        enrico1 = Enrico.from_public_keys(
+            verifying_key = globalStorage[label]["data_source_public_key"],
+            policy_encrypting_key= globalStorage[label]["policy_pubkey"]
+        )
+
+        response = requests.get(imgUrl)
+
+        ciphertext = UmbralMessageKit.from_bytes(response.content)
+
+        global gloablEnrico
+
+        decrypted_plaintext = bob.retrieve(
+            ciphertext,
+            label=label.encode(),
+            enrico=enrico1,
+            alice_verifying_key = alice_sig_pubkey
+        )
+
+        return send_file(io.BytesIO(decrypted_plaintext[0]), mimetype="image/"+frmt, as_attachment=True, attachment_filename='{}.'.format(label)+frmt), 200
+
 encrypt_view = EncryptView.as_view("encrypt_view")
 login_view = LoginView.as_view("register_view")
+test_view = TestView.as_view("test_view")
 
 encrypt_blueprint.add_url_rule('/', view_func=encrypt_view, methods=['GET', 'POST'])
 encrypt_blueprint.add_url_rule('/login', view_func=login_view, methods=['POST'])
+encrypt_blueprint.add_url_rule('/test', view_func=test_view, methods=['GET', 'POST'])
