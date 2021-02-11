@@ -62,9 +62,10 @@ export default function MintForm() {
         setLoadingState("Minting Artwork");
         // Receive uri from server
         let uri = res.data.uri;
-
+        console.log(res.data);
+        console.log(uri);
         // Mint token
-        await contract.MintNFT(account, uri, false, 0);
+        await contract.MintNFT(account, uri.toString(), false, 0);
 
         enqueueSnackbar(`Check your collection!`, {
           variant: "success",
@@ -84,9 +85,12 @@ export default function MintForm() {
   };
 
   async function testMint() {
-
-    await contract.MintNFT(account, "2dc9a903-1fb4-4854-820c-c40cb9673d03", false, 0);
-
+    await contract.MintNFT(
+      account,
+      "2dc9a903-1fb4-4854-820c-c40cb9673d03",
+      false,
+      0
+    );
   }
 
   return (

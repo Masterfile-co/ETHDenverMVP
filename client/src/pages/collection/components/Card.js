@@ -13,18 +13,13 @@ export default function Card({
   let [data, setData] = useState(null);
 
   useEffect(() => {
-    // axios.get(process.env.REACT_APP_BUCKET_URL+uri).then((res) => {
-    //   console.log(res);
-    //   setData(res.data);
-    // });
+
     axios
-      .get(
-        "https://hub.textile.io/ipns/bafzbeih4na564d2fifrz22kqlqmfhbrlxokggjelmw6rnecxlb3g5o5iyy/ac489a4f-38de-43da-b74c-af47273be1df_metadata.json"
-      )
+      .get(process.env.REACT_APP_BUCKET_URL + uri + "_metadata.json")
       .then((res) => {
-        console.log(res);
         setData(res.data);
       });
+
   }, []);
 
   async function handleSell() {
@@ -39,11 +34,8 @@ export default function Card({
       <li className="col-span-1 flex flex-col text-center bg-white rounded-lg shadow">
         <div className="flex-1 flex flex-col p-8">
           <img
-            className="w-32 h-32 flex-shrink-0 mx-auto bg-black"
-            // src={data?.properties?.thumbnail}
-            src={
-              "https://hub.textile.io/ipns/bafzbeih4na564d2fifrz22kqlqmfhbrlxokggjelmw6rnecxlb3g5o5iyy/ac489a4f-38de-43da-b74c-af47273be1df_thumbnail.jpg"
-            }
+            className="w-48 h-48 flex-shrink-0 mx-auto bg-white"
+            src={data?.properties?.thumbnail}
             alt=""
           />
           <h3 className="mt-6 text-gray-900 text-sm leading-5 font-medium">

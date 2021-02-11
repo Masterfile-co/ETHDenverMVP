@@ -26,6 +26,7 @@ from nucypher.config.constants import TEMPORARY_DOMAIN
 from nucypher.config.keyring import NucypherKeyring
 
 SESSION_ID = os.getenv("SESSION_ID")
+BUCKET_ID = os.getenv("BUCKET_ID")
 
 # "localhost:11500"
 SEEDNODE_URI = os.getenv("SEEDNODE_URI") 
@@ -60,7 +61,7 @@ size = 128, 128
 
 formats = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif"}
 
-base_uri = "https://hub.textile.io/ipns/bafzbeibtbalzgi3nb4yiej47mcaajsd6xcn6m3avygg6ycq67z3fulzw5e/"
+base_uri = "https://hub.textile.io/ipns/" + BUCKET_ID + "/"
 
 
 # Web 3 initiation
@@ -253,7 +254,7 @@ class EncryptView(MethodView):
         enrico = Enrico(policy_encrypting_key=policy_pubkey)
 
         buf = io.BytesIO()
-        img.save(buf, format='JPEG')
+        img.save(buf, format=frmt)
 
         ciphertext, signature = enrico.encrypt_message(plaintext=buf.getvalue())
         # upload file and metadata to textile

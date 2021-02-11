@@ -15,6 +15,7 @@
     "@testing-library/user-event": "^12.1.10",
     "autoprefixer": "9",
     "axios": "^0.21.1",
+    "bignumber.js": "^9.0.1",
     "ethers": "^5.0.30",
     "form-data": "^3.0.0",
     "graphql": "^15.5.0",

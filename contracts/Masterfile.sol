@@ -176,10 +176,9 @@ contract Masterfile is ERC165, IERC1155, IERC1155MetadataURI {
     function requestBuy(uint256 tokenId) external payable {
         MST memory _token = tokenData[tokenId];
 
-        // require(msg.sender != _token.owner, "MST: Already Owned");
-        // require(_token.forSale, "MST: Not for sale");
+        require(msg.sender != _token.owner, "MST: Already Owned");
+        require(_token.forSale, "MST: Not for sale");
         // require(_token.offer.buyer == address(0), "MST: Exsisting Offer");
-
 
         // // fee for 3 nodes for 1 year
 

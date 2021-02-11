@@ -58,7 +58,7 @@ export default function Collection() {
   }
 
   return (
-    <div class="py-10">
+    <div className="py-10">
       {modalOpen ? (
         <SellModal
           sale={sale}
@@ -76,9 +76,9 @@ export default function Collection() {
       </Helmet>
       <Header />
       <main>
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div class="px-4 py-8 sm:px-0">
-            <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+          <div className="px-4 py-8 sm:px-0">
+            <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {data?.msts?.map((work, key) => (
                 <Card
                   key={key}
