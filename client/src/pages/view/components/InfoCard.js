@@ -45,7 +45,7 @@ export default function InfoCard({ mst, purchasePrice }) {
               Purchase Price
             </dt>
             <dd className="mt-1 text-sm leading-5 text-gray-900 sm:mt-0 sm:col-span-2">
-              {ethers.utils.formatEther(purchasePrice)} ETH
+              {purchasePrice? ethers.utils.formatEther(purchasePrice) : null} ETH
             </dd>
           </div>
         </dl>

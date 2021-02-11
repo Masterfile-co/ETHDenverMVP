@@ -86,15 +86,20 @@ masterfile_contract = w3.eth.contract(address="0x86f0c5Bd13925c55c591CB1a215Bee5
 
 # Listen for Sale Offer events
 
+globalStorage = {}
+
 def onRequestBuy(event):
     # print(event)
     user = event.args["buyer"]
     keys = masterfile_contract.functions.userKeys(user).call()
     tokenId = event.args["tokenId"]
     token = masterfile_contract.functions.tokenData(tokenId).call()
+    uri = token[1]
     label = token[2]
     print(user)
     print(token)
+
+    global globalStorage
 
     # Call token transfer
 
@@ -107,18 +112,28 @@ def onRequestBuy(event):
 
     masterfile_contract.functions.safeTransferFrom(token[0], user, tokenId, 1, compiled_data).transact({'from': w3.eth.accounts[0]})
 
-    # Distribute kfrags
+    # Revoke old policy
     try:
-        bob = Bob.from_public_keys(verifying_key=keys[0], encrypting_key=keys[1], federated_only=True)
-        policy = alice.grant(
-            bob,
-            label=label.encode(),
-            m=2,
-            n=3,
-            expiration = maya.now() + timedelta(days=5)
-        )
+        if globalStorage[uri]["policy"]:
+            alice.revoke(globalStorage[uri]["policy"])
     except:
-        print("policy exsists")
+        print("No Policy")
+
+    # Distribute kfrags
+    # try:
+    print(keys)
+    bob = Bob.from_public_keys(verifying_key=keys[0], encrypting_key=keys[1], federated_only=True)
+    policy = alice.grant(
+        bob,
+        label=uri.encode(),
+        m=2,
+        n=3,
+        expiration = maya.now() + timedelta(days=5)
+    )
+    globalStorage[uri]["policy"] = policy
+
+    # except:
+    #     print("policy exsists")
 
     policy.treasure_map_publisher.block_until_complete()
     print("Policy {} was created".format(label))
@@ -191,6 +206,10 @@ class LoginView(MethodView):
 
                 print(keys)
 
+                if not keys[0]:
+                    masterfile_contract.functions.RegisterUser(user, keyring.signing_public_key.to_bytes(), keyring.encrypting_public_key.to_bytes()).transact({"from": w3.eth.accounts[0]})
+
+
                 response = {
                         'message': "Login Successful"
                     }
@@ -210,8 +229,6 @@ class EncryptView(MethodView):
 
     def post(self):
         "User should post file and encryption keys for Enrico to encrypt. This should upload encrypted file and metadat to textile"
-
- 
 
         try: 
             image = request.files["artwork"]
@@ -242,7 +259,6 @@ class EncryptView(MethodView):
 
         frmt = img.format
         
-
         thmnl = img.copy()
         thmnl.thumbnail(size)
         thmnl.save("./app/encrypt/bucket/"+filename+"_thumbnail"+formats[frmt], format=frmt)
@@ -259,6 +275,11 @@ class EncryptView(MethodView):
         from nucypher.characters.lawful import Enrico
 
         enrico = Enrico(policy_encrypting_key=policy_pubkey)
+
+        global globalStorage
+        globalStorage[filename] = {"policy_pubkey": policy_pubkey ,"data_source_public_key": bytes(enrico.stamp), "policy": None}
+
+        print(globalStorage)
 
         buf = io.BytesIO()
         img.save(buf, format=frmt)
@@ -305,13 +326,16 @@ class EncryptView(MethodView):
 
     def get(self):
         "User should send Bob password to decrypt files"
+        from nucypher.utilities.logging import GlobalLoggerSettings
+        GlobalLoggerSettings.set_log_level(log_level_name='debug')
+        GlobalLoggerSettings.start_console_logging()
+        
 
         try:
             user = request.args.get("user")
             pw = request.args.get("password")
             label = request.args.get("label")
-            imgUrl = request.args.get("imgUrl")
-            frmt = imgUrl[-3:]
+            frmt = request.args.get("frmt")
 
         except:
             response = {
@@ -325,7 +349,7 @@ class EncryptView(MethodView):
         keyringBob.unlock(password=pw)   
 
         bob = Bob(
-            keyring=keyring,
+            keyring=keyringBob,
             known_nodes=[ursula],
             federated_only=True,
             learn_on_same_thread=True,
@@ -336,18 +360,17 @@ class EncryptView(MethodView):
 
         from nucypher.characters.lawful import Enrico
 
-        policy_pubkey = alice.get_policy_encrypting_key_from_label(label.encode())
-        enrico = Enrico(policy_encrypting_key=policy_pubkey)
-        data_source_public_key = bytes(enrico.stamp)
-
+        global globalStorage
 
         enrico1 = Enrico.from_public_keys(
-            verifying_key = data_source_public_key,
-            policy_encrypting_key=policy_pubkey
+            verifying_key = globalStorage[label]["data_source_public_key"],
+            policy_encrypting_key= globalStorage[label]["policy_pubkey"]
         )
 
+        imgUrl = base_uri+label+"."+frmt
         response = requests.get(imgUrl)
-        ciphertext = io.BytesIO(response.content)
+
+        ciphertext = UmbralMessageKit.from_bytes(response.content)
 
         decrypted_plaintext = bob.retrieve(
             ciphertext,
@@ -356,13 +379,7 @@ class EncryptView(MethodView):
             alice_verifying_key = alice_sig_pubkey
         )
 
-        # img = Image.open(decrypted_plaintext, formats=[formatsReversed[frmt]])
-
-        return send_file(io.BytesIO(decrypted_plaintext), mimetype="image/"+frmt, as_attachment=True, attachment_filename='{}.'.format(label)+frmt), 200
-
-globalCipherText = None
-gloablEnrico = None
-globalStorage = {}
+        return send_file(io.BytesIO(decrypted_plaintext[0]), mimetype="image/"+frmt, as_attachment=False, attachment_filename='{}.'.format(label)+frmt), 200
 
 class TestView(MethodView):
 
@@ -415,7 +432,7 @@ class TestView(MethodView):
         enrico = Enrico(policy_encrypting_key=policy_pubkey)
 
         global globalStorage
-        globalStorage[filename] = {"policy_pubkey": policy_pubkey ,"data_source_public_key": bytes(enrico.stamp)}
+        globalStorage[filename] = {"policy_pubkey": policy_pubkey ,"data_source_public_key": bytes(enrico.stamp), "policy": None}
 
         buf = io.BytesIO()
         img.save(buf, format=frmt)
@@ -423,8 +440,6 @@ class TestView(MethodView):
         ciphertext, signature = enrico.encrypt_message(plaintext=buf.getvalue())
         # upload file and metadata to textile
 
-        global globalCipherText
-        globalCipherText = ciphertext
 
         f = open("./app/encrypt/bucket/"+filename+formats[frmt], "wb")
         f.write(ciphertext.to_bytes())
@@ -536,8 +551,6 @@ class TestView(MethodView):
 
         ciphertext = UmbralMessageKit.from_bytes(response.content)
 
-        global gloablEnrico
-
         decrypted_plaintext = bob.retrieve(
             ciphertext,
             label=label.encode(),
@@ -545,7 +558,7 @@ class TestView(MethodView):
             alice_verifying_key = alice_sig_pubkey
         )
 
-        return send_file(io.BytesIO(decrypted_plaintext[0]), mimetype="image/"+frmt, as_attachment=True, attachment_filename='{}.'.format(label)+frmt), 200
+        return send_file(io.BytesIO(decrypted_plaintext[0]), mimetype="image/"+frmt, as_attachment=False, attachment_filename='{}.'.format(label)+frmt), 200
 
 encrypt_view = EncryptView.as_view("encrypt_view")
 login_view = LoginView.as_view("register_view")

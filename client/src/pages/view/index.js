@@ -28,9 +28,9 @@ export default function View() {
     }
   }, [data]);
 
-  console.log(url.substring(6));
+  // console.log(mst)
 
-  console.log(data);
+  // console.log(data);
 
   return (
     <>
@@ -45,7 +45,7 @@ export default function View() {
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div class="px-4 py-8 sm:px-0">
             <InfoCard mst={mst} purchasePrice={data?.mst?.salePrice} />
-            <PictureFame />
+            <PictureFame uri={data?.mst?.uri} imgUrl={mst?.properties?.masterfile}/>
           </div>
         </div>
       </main>
